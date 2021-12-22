@@ -1,0 +1,115 @@
+[
+    {
+        "name": "data",
+        "path": "\\data",
+        "type": "folder",
+        "children": [
+            {
+                "name": "cleanSamples",
+                "path": "\\data\\cleanSamples",
+                "type": "folder",
+                "children": []
+            },
+            {
+                "name": "rawSamples",
+                "path": "\\data\\rawSamples",
+                "type": "folder",
+                "children": []
+            },
+            {
+                "name": "samplesOld",
+                "path": "\\data\\samplesOld",
+                "type": "folder",
+                "children": []
+            }
+        ]
+    },
+    {
+        "name": "helpers",
+        "path": "\\helpers",
+        "type": "folder",
+        "children": []
+    },
+    {
+        "name": "metadata",
+        "path": "\\metadata",
+        "type": "folder",
+        "children": [
+            {
+                "name": "sampleAnalysis",
+                "path": "\\metadata\\sampleAnalysis",
+                "type": "folder",
+                "children": [
+                    {
+                        "name": "sample1",
+                        "path": "\\metadata\\sampleAnalysis\\sample1",
+                        "type": "folder",
+                        "children": [
+                            {
+                                "name": "clusters",
+                                "path": "\\metadata\\sampleAnalysis\\sample1\\clusters",
+                                "type": "folder",
+                                "children": []
+                            },
+                            {
+                                "name": "histograms",
+                                "path": "\\metadata\\sampleAnalysis\\sample1\\histograms",
+                                "type": "folder",
+                                "children": []
+                            },
+                            {
+                                "name": "nearestNeighboursCounts",
+                                "path": "\\metadata\\sampleAnalysis\\sample1\\nearestNeighboursCounts",
+                                "type": "folder",
+                                "children": []
+                            },
+                            {
+                                "name": "projections",
+                                "path": "\\metadata\\sampleAnalysis\\sample1\\projections",
+                                "type": "folder",
+                                "children": []
+                            },
+                            {
+                                "name": "samplesPerCluster",
+                                "path": "\\metadata\\sampleAnalysis\\sample1\\samplesPerCluster",
+                                "type": "folder",
+                                "children": []
+                            },
+                            {
+                                "name": "scatterplots",
+                                "path": "\\metadata\\sampleAnalysis\\sample1\\scatterplots",
+                                "type": "folder",
+                                "children": []
+                            }
+                        ]
+                    }
+                ]
+            }
+        ]
+    },
+    {
+        "name": "snippets",
+        "path": "\\snippets",
+        "type": "folder",
+        "children": [
+            {
+                "name": "temp",
+                "path": "\\snippets\\temp",
+                "type": "folder",
+                "children": []
+            }
+        ]
+    },
+    {
+        "name": "temp",
+        "path": "\\temp",
+        "type": "folder",
+        "children": []
+    },
+    {
+        "name": "tests",
+        "path": "\\tests",
+        "type": "folder",
+        "children": []
+    }
+]
