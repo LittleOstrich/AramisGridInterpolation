@@ -1,5 +1,7 @@
 import time
 
+from metadata.createMetadata import se
+
 
 class metadataDsts:
     scPlot = "scatterplots"
@@ -17,7 +19,7 @@ import pandas as pd
 from sklearn.cluster import KMeans
 from sklearn.metrics import silhouette_score, calinski_harabasz_score, davies_bouldin_score
 
-from backbone import computeNearestNeighboursMatrix, alignData
+from backbone import computeNearestNeighboursMatrix, alignData, constructMatrix
 from helpers.csvTools import csv_to_xlsx, listsToCsv
 from helpers.general_tools import getColours, sciF, execFunctionOnMatrix, removeDir
 from helpers.seabornTools import createScatterPlot, plotHistogram, nearestNeighbourscatterPlot, scatterPlot3D
@@ -630,3 +632,24 @@ def colourDataByShape(data, dstDir, nnn=6):
     scatterPlot3D(data, dst=dstDir, title="visualization1.png", colours=colours, alpha=0.5)
     scatterPlot3D(data, dst=dstDir, title="visualization2.png", colours=colours, alpha=0.25)
     scatterPlot3D(data, dst=dstDir, title="visualization3.png", colours=colours, alpha=0.03)
+
+
+def viewPointMaps(data, dstDir):
+    dstDir = dstDir + os.sep + "viewPointMaps"
+    if os.path.exists(dstDir):
+        removeDir(dstDir)
+        time.sleep(1)
+    os.makedirs(dstDir, exist_ok=True)
+    N = len(data)
+    se.start()
+    for i in range(0,N, 100):
+        visited1, visited2, pointMap = constructMatrix(data, k=7, sn=i, hexagonsOnly=False)
+
+        ass = np.array(list(visited1))
+        visitedData = data[ass]
+        scatterPlot3D(visitedData, show=False, dst=dstDir, title=str(i) + "even.png", colours='b', alpha=0.5)
+
+        ass = np.array(list(visited2))
+        visitedData = data[ass]
+        scatterPlot3D(visitedData, show=False, dst=dstDir, title=str(i) + "odd.png", colours='b', alpha=0.5)
+    se.end()

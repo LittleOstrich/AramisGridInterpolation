@@ -184,9 +184,6 @@ def inFirstSet(x):
     return ret
 
 
-def visuazlizePointMap(data):
-    scatterPlot3D(data, dst=".", title="something.png", colours='b', alpha=0.5)
-
 
 def curSet(v1, v2, m):
     ret = None
@@ -196,7 +193,7 @@ def curSet(v1, v2, m):
         ret = v2
     else:
         assert False
-
+    return ret.copy()
 
 def oppSet(v1, v2, m):
     ret = None
@@ -206,6 +203,7 @@ def oppSet(v1, v2, m):
         ret = v1
     else:
         assert False
+    return ret.copy()
 
 
 def detSwitch(v1, v2):
@@ -223,8 +221,49 @@ def detSwitch(v1, v2):
 def terminateLoop():
     return True
 
+def determinePosition(alignedData, curIndices, curV):
+    flps = list()  # far left points
+    lps = list()  # left points
+    cps = list()  # center points
+    rps = list()  # right points
+    frps = list()  # far right points
 
-def constructMatrix(data, k=7):
+    M = len(curIndices)
+    for j in range(M):
+        nbInd = curIndices[j]
+        if nbInd in curV:
+            continue
+        else:
+            lx = alignedData[j][0]
+
+            # determine affiliation
+            if isFarleft(lx):
+                flps.append(nbInd)
+            elif isLeft(lx):
+                lps.append(nbInd)
+            elif isCenter(lx):
+                cps.append(nbInd)
+            elif isRight(lx):
+                rps.append(nbInd)
+            elif isFarright(lx):
+                frps.append(nbInd)
+            else:
+                continue
+
+    flps = np.array(flps)  # far left points
+    lps = np.array(lps)  # left points
+    cps = np.array(cps)  # center points
+    rps = np.array(rps)  # right points
+    frps = np.array(frps)  # far right points
+
+    return flps, lps, cps, rps, frps
+
+def startNumber(sn, N):
+    if sn is None:
+        sn = np.random.randint(N)  # start index
+    return sn
+
+def constructMatrix(data, k=7, sn=None, hexagonsOnly=False):
     N = len(data)
 
     visited1 = set()
@@ -235,7 +274,7 @@ def constructMatrix(data, k=7):
 
     dists, indices = computeNearestNeighboursMatrix(data, k=k)
 
-    sn = np.random.randint(N)  # start index
+    sn = startNumber(sn, N)  # start index
     next1.add(sn)
 
     pointMap = np.zeros((N, 2))
@@ -248,7 +287,7 @@ def constructMatrix(data, k=7):
     '''
 
     # Crude way to avoid an endless loop
-    iterationsMax = 3000
+    iterationsMax = 30000
     iterationsCur = 0
 
     switch = 0
@@ -273,116 +312,137 @@ def constructMatrix(data, k=7):
         oppV = oppSet(visited1, visited2, switch)
 
         # collect neighbours
-        if len(curS) != 0:
 
-            curInd = curS.pop()
-            visited1.add(curInd)
+        curInd = curS.pop()
+        curV.add(curInd)
 
-            curIndices = indices[curInd]
-            alignedData = alignData(data[curIndices])
+        curIndices = indices[curInd]
+        alignedData = alignData(data[curIndices])
 
-            flps = list()  # far left points
-            cps = list()  # center points
-            frps = list()  # far right points
 
-            M = len(curIndices)
+        flps, lps, cps, rps, frps = determinePosition(alignedData, curIndices, curV)
+
+        # update pointMap
+        # get relative coordinates
+        curIndX = pointMap[curInd, 0]
+        curIndY = pointMap[curInd, 1]
+
+        # update far left point
+        M = len(flps)
+        if M > 0:
+            flpDists = np.zeros((M))
             for j in range(M):
-                nbInd = curIndices[j]
-                if nbInd in curV:
-                    continue
+                flp = flps[j]
+                dist = np.abs(data[flp][0] - data[curInd][0])
+                flpDists[j] = dist
+            lNb = np.argmin(flps, axis=0)  # left neighbour
+            pointMap[flps[lNb], 0] = curIndX - 2
+            pointMap[flps[lNb], 1] = curIndY
+            curS.add(flps[lNb])
+
+        # updating left points
+        M = len(lps)
+        if M == 2:
+            lp = lps[0]
+            lq = lps[1]
+            py = data[lp][1]
+            qy = data[lq][1]
+            cpy = data[curInd][1]
+            if py < cpy and qy > cpy:
+                pointMap[lp, 0] = curIndX - 1
+                pointMap[lp, 1] = curIndY - 1
+                pointMap[lq, 0] = curIndX - 1
+                pointMap[lq, 1] = curIndY + 1
+                oppS.add(lp)
+                oppS.add(lq)
+            elif py > cpy and qy < cpy:
+                pointMap[lp, 0] = curIndX - 1
+                pointMap[lp, 1] = curIndY + 1
+                pointMap[lq, 0] = curIndX - 1
+                pointMap[lq, 1] = curIndY - 1
+                oppS.add(lp)
+                oppS.add(lq)
+
+        # updating right points
+        M = len(rps)
+        if M == 2:
+            rp = rps[0]
+            rq = rps[1]
+            py = data[rp][1]
+            qy = data[rq][1]
+            cpy = data[curInd][1]
+            if py < cpy and qy > cpy:
+                pointMap[rp, 0] = curIndX + 1
+                pointMap[rp, 1] = curIndY - 1
+                pointMap[rq, 0] = curIndX + 1
+                pointMap[rq, 1] = curIndY + 1
+                oppS.add(rp)
+                oppS.add(rq)
+            elif py > cpy and qy < cpy:
+                pointMap[rp, 0] = curIndX + 1
+                pointMap[rp, 1] = curIndY + 1
+                pointMap[rq, 0] = curIndX + 1
+                pointMap[rq, 1] = curIndY - 1
+                oppS.add(rp)
+                oppS.add(rq)
+
+        # set far right points
+        M = len(frps)
+        if M > 0:
+            frpDists = np.zeros((M))
+            for j in range(M):
+                frp = frps[j]
+                dist = np.abs(data[frp][0] - data[curInd][0])
+                frpDists[j] = dist
+            rNb = np.argmin(frpDists)  # right neighbour
+            pointMap[frps[rNb], 0] = curIndX + 2
+            pointMap[frps[rNb], 1] = curIndY
+            curS.add(frps[rNb])
+
+        # set center points above
+        M = len(cps)
+        if M > 0:
+            abovePoints = np.zeros((M, 2))
+            belowPoints = np.zeros((M, 2))
+            numAbove = 0
+            numBelow = 0
+            for j in range(M):
+                cp = cps[j]
+                diff = data[curInd][1] - data[cp][1]
+                if diff < 0:
+                    abovePoints[numAbove, 1] = diff
+                    abovePoints[numAbove, 0] = cp
+                    numAbove = numAbove + 1
+                elif diff > 0:
+                    belowPoints[numAbove, 1] = diff
+                    belowPoints[numAbove, 0] = cp
+                    numBelow = numBelow + 1
                 else:
-                    lx = alignedData[j][0]
+                    assert False
+                curS.add(cp)
 
-                    # determine affiliation
-                    if isFarleft(lx):
-                        flps.append(nbInd)
-                    elif isCenter(lx):
-                        cps.append(nbInd)
-                    elif isFarright(lx):
-                        frps.append(nbInd)
-                    else:
-                        continue
+            abovePoints = abovePoints[:numAbove, :]
+            belowPoints = belowPoints[:numBelow, :]
 
-            flps = np.array(flps)  # far left points
-            cps = np.array(cps)  # center points
-            frps = np.array(frps)  # far right points
+            if len(abovePoints) != 0:
+                topNeighbour = abovePoints[np.argmin(abovePoints[:, 0]), 0]  # top neighbour
+                topNeighbour = int(topNeighbour)
+                pointMap[topNeighbour, 0] = int(curIndX)
+                pointMap[topNeighbour, 1] = int(curIndY + 2)
 
-            # update pointMap
-            # get relative coordinates
-            curIndX = pointMap[curInd, 0]
-            curIndY = pointMap[curInd, 1]
-
-            # update leftPoint
-            M = len(flps)
-            if M > 0:
-                flpDists = np.zeros((M))
-                for j in range(M):
-                    flp = flps[j]
-                    dist = np.abs(data[flp][0] - data[curInd][0])
-                    flpDists[j] = dist
-                lNb = np.argmin(flps, axis=0)  # left neighbour
-                pointMap[flps[lNb], 0] = curIndX - 1
-                pointMap[flps[lNb], 1] = curIndY - 1
-                next1.add(flps[lNb])
-
-            M = len(frps)
-            if M > 0:
-                frpDists = np.zeros((M))
-                for j in range(M):
-                    frp = frps[j]
-                    dist = np.abs(data[frp][0] - data[curInd][0])
-                    frpDists[j] = dist
-                rNb = np.argmin(frpDists)  # right neighbour
-                pointMap[frps[rNb], 0] = curIndX + 1
-                pointMap[frps[rNb], 1] = curIndY + 1
-                next1.add(flps[rNb])
-
-            M = len(cps)
-
-            if M > 0:
-                abovePoints = np.zeros((M, 2))
-                belowPoints = np.zeros((M, 2))
-                numAbove = 0
-                numBelow = 0
-                for j in range(M):
-                    cp = cps[j]
-                    diff = data[curInd][1] - data[cp][1]
-                    if diff < 0:
-                        abovePoints[numAbove, 1] = diff
-                        abovePoints[numAbove, 0] = cp
-                        numAbove = numAbove + 1
-                    elif diff > 0:
-                        belowPoints[numAbove, 1] = diff
-                        belowPoints[numAbove, 0] = cp
-                        numBelow = numBelow + 1
-                    else:
-                        assert False
-                    next1.add(cp)
-
-                abovePoints = abovePoints[:numAbove, :]
-                belowPoints = belowPoints[:numBelow, :]
-
-                if len(abovePoints) != 0:
-                    topNeighbour = abovePoints[np.argmin(abovePoints[:, 0]), 0]  # top neighbour
-                    topNeighbour = int(topNeighbour)
-                    pointMap[topNeighbour, 0] = int(curIndX)
-                    pointMap[topNeighbour, 1] = int(curIndY + 1)
-
-                if len(belowPoints) != 0:
-                    bottomNeighbour = belowPoints[np.argmin(belowPoints[:, 0]), 0]  # bottom neighbour
-                    bottomNeighbour = int(bottomNeighbour)
-                    pointMap[bottomNeighbour, 0] = int(curIndX)
-                    pointMap[bottomNeighbour, 1] = int(curIndY - 1)
+            if len(belowPoints) != 0:
+                bottomNeighbour = belowPoints[np.argmin(belowPoints[:, 0]), 0]  # bottom neighbour
+                bottomNeighbour = int(bottomNeighbour)
+                pointMap[bottomNeighbour, 0] = int(curIndX)
+                pointMap[bottomNeighbour, 1] = int(curIndY - 2)
         iterationsCur = iterationsCur + 1
 
-    for point in pointMap:
-        print(point)
-    print("Are we done?")
+        visited1 = curV.copy()
+        visited2 = oppV.copy()
+        next1 = curS.copy()
+        next2 = oppS.copy()
 
-    ####
-    ass = np.array(list(visited1))
-    visitedData = data[ass]
-    visuazlizePointMap(visitedData)
+    return visited1, visited2, pointMap
 
 
 def test():
@@ -393,4 +453,4 @@ def test():
     constructMatrix(data)
 
 
-test()
+#test()

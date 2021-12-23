@@ -8,7 +8,7 @@ from helpers.general_tools import execFunctionOnMatrix, sciF
 from helpers.timeTools import myTimer
 from metadata.metadataHelper import findBestKForKMeans, countsByCluster, visualizeCounts, createProjectedDataHistograms, \
     computeCountsTest, createScattterPlots, saveDistances, randomHexagonSampling, detailedRandomHexagonSampling, \
-    viewTransformedDataSurroundings, countHexagones, colourDataByShape
+    viewTransformedDataSurroundings, countHexagones, colourDataByShape, viewPointMaps
 from paths import DataDir, metadataDir
 
 show = False
@@ -43,11 +43,10 @@ for i in range(N):
     #
     # saveDistances(d["data"], d["dstDir"])
     # detailedRandomHexagonSampling(d["data"], d["dstDir"], numSamples=numSamples)
-    # viewTransformedDataSurroundings(d["data"], d["dstDir"])
+    # viewTrans,formedDataSurroundings(d["data"], d["dstDir"])
     # countHexagones(d["data"], d["dstDir"])
-
     se.start()
-    colourDataByShape(d["data"], d["dstDir"])
+    viewPointMaps(d["data"], d["dstDir"])
     se.end()
     
     print(d["dstDir"])
