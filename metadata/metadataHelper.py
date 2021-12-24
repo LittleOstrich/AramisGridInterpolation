@@ -1,6 +1,7 @@
 import time
 
-from metadata.createMetadata import se
+from helpers.numpyTools import safeIndexing
+from helpers.timeTools import myTimer
 
 
 class metadataDsts:
@@ -22,7 +23,8 @@ from sklearn.metrics import silhouette_score, calinski_harabasz_score, davies_bo
 from backbone import computeNearestNeighboursMatrix, alignData, constructMatrix
 from helpers.csvTools import csv_to_xlsx, listsToCsv
 from helpers.general_tools import getColours, sciF, execFunctionOnMatrix, removeDir
-from helpers.seabornTools import createScatterPlot, plotHistogram, nearestNeighbourscatterPlot, scatterPlot3D
+from helpers.seabornTools import createScatterPlot, plotHistogram, nearestNeighbourscatterPlot, scatterPlot3D, \
+    scatterPlot2D
 
 
 def createScattterPlots(data, dstDir=None, show=False, save=True, dpi=500):
@@ -640,16 +642,136 @@ def viewPointMaps(data, dstDir):
         removeDir(dstDir)
         time.sleep(1)
     os.makedirs(dstDir, exist_ok=True)
+
     N = len(data)
-    se.start()
-    for i in range(0,N, 100):
+
+    goodRuns = list()
+    se = myTimer("viewPointMapsTimer")
+    # for i in range(0, N, 100):
+    for i in [1100, 0, 3000, 1556]:
+        print("Starting with: ", str(i))
+        se.start()
         visited1, visited2, pointMap = constructMatrix(data, k=7, sn=i, hexagonsOnly=False)
+        se.end()
 
-        ass = np.array(list(visited1))
-        visitedData = data[ass]
-        scatterPlot3D(visitedData, show=False, dst=dstDir, title=str(i) + "even.png", colours='b', alpha=0.5)
+        evenIndexed = np.array(list(visited1)).astype(int)
+        evenData = data[evenIndexed]
+        scatterPlot3D(evenData, show=False, dst=dstDir, title=str(i) + "_even.png", colours='b', alpha=0.5)
+        np.save(dstDir + os.sep + str(i) + "_evenData", evenData)
 
-        ass = np.array(list(visited2))
-        visitedData = data[ass]
-        scatterPlot3D(visitedData, show=False, dst=dstDir, title=str(i) + "odd.png", colours='b', alpha=0.5)
-    se.end()
+        oddIndexed = np.array(list(visited2)).astype(int)
+        oddData = data[oddIndexed]
+        scatterPlot3D(oddData, show=False, dst=dstDir, title=str(i) + "_odd.png", colours='b', alpha=0.5)
+        np.save(dstDir + os.sep + str(i) + "_oddData", oddData)
+
+        visited = np.concatenate([evenIndexed, oddIndexed])
+        tes = list()
+        tos = list()
+        fes = list()
+        fos = list()
+
+        colourSpace = getColours(5)
+        colours = np.zeros((N, 4))
+
+        irregularPointsIndices = list()
+        N = len(data)
+        x = pointMap[:, 0] % 2 == 0
+        y = pointMap[:, 1] % 2 == 0
+        for j in range(N):
+            if j in visited1:
+                if x[j] and y[j]:
+                    tes.append(j)
+                    colours[j, :] = colourSpace[0]
+                else:
+                    fes.append(j)
+                    colours[j, :] = colourSpace[1]
+            elif j in visited2:
+                if not x[j] and not y[j]:
+                    tos.append(j)
+                    colours[j, :] = colourSpace[2]
+                else:
+                    fos.append(j)
+                    colours[j, :] = colourSpace[3]
+            else:
+                irregularPointsIndices.append(j)
+                colours[j, :] = colourSpace[4]
+
+        tes = np.array(tes)
+        tos = np.array(tos)
+        fes = np.array(fes)
+        fos = np.array(fos)
+        irregularPointsIndices = np.array(irregularPointsIndices)
+
+        trueEvens = safeIndexing(data, tes)
+        trueOdds = safeIndexing(data, tos)
+        falseEvens = safeIndexing(data, fes)
+        falseOdds = safeIndexing(data, fos)
+        irregularPoints = data[irregularPointsIndices]
+
+        labels = ["true evens", "true odds", "false evens", "false odds", "irregulars"]
+
+        combinedData = np.concatenate([trueEvens, trueOdds, falseEvens, falseOdds, irregularPoints])
+
+        scatterPlot3D(combinedData, show=False, dst=dstDir, title=str(i) + "_combinedDetailed.png",
+                      colours=colours, cs=colourSpace, alpha=0.03, labels=labels)
+
+        labels = ["evens", "odds", "irregulars"]
+        cs = getColours(3)
+        colors = [cs[0] for _ in evenData] + [cs[1] for _ in oddData] + \
+                 [cs[2] for _ in irregularPointsIndices]
+        combinedData = np.concatenate([evenData, oddData, irregularPoints])
+        scatterPlot3D(combinedData, show=False, dst=dstDir, title=str(i) + "_combinedSimple.png", colours=colors,
+                      alpha=0.03, labels=labels, cs=cs)
+
+        xs = np.concatenate(
+            [pointMap[evenIndexed][:, 0],
+             pointMap[oddIndexed][:, 0],
+             pointMap[irregularPointsIndices][:, 0]]).astype(int)[:, np.newaxis]
+        ys = np.concatenate(
+            [pointMap[evenIndexed][:, 1],
+             pointMap[oddIndexed][:, 1],
+             pointMap[irregularPointsIndices][:, 1]]).astype(int)[:, np.newaxis]
+
+        xys = np.concatenate([xs, ys], axis=1)
+
+        scatterPlot2D(xys, show=False, dst=dstDir, title=str(i) + "_pointMap.png", colours=colors, alpha=0.03)
+
+        parities = ["parity"]
+        for v in visited:
+            if v in tes:
+                parities.append("true even")
+            elif v in fes:
+                parities.append("false even")
+            elif v in tos:
+                parities.append("true odd")
+            elif v in fos:
+                parities.append("false odd")
+            else:
+                parities.append("unmapped")
+
+        lists = [["indices"] + evenIndexed.tolist() + oddIndexed.tolist(),
+                 ["xs"] + xs[:, 0].tolist(),
+                 ["ys"] + ys[:, 0].tolist(),
+                 parities]
+
+        listsToCsv(lists, dst=dstDir + os.sep + str(i) + "_pointMap.csv", withDate=False, delim=";", debug=False,
+                   deleteIfExists=False)
+
+        pMeven = pointMap[evenIndexed]
+        pModd = pointMap[oddIndexed]
+
+        pMevenFiltered = pMeven[np.logical_and(pMeven[:, 0] % 2 == 0, pMeven[:, 1] % 2 == 0)]
+        pModdFiltered = pModd[np.logical_and(pModd[:, 0] % 2 != 0, pModd[:, 1] % 2 != 0)]
+
+        pMevenTemp = len(pMevenFiltered)
+        pModdTemp = len(pModdFiltered)
+
+        goodRuns.append("Evens: " + str(len(pMeven)) + ", " +
+                        "Even errors: " + str(len(pMeven) - pMevenTemp) + ", " +
+                        "Odds: " + str(len(pMeven)) + ", " +
+                        "Odd errors: " + str(len(pMeven) - pModdTemp) + "\n"
+                        )
+
+        f = open(dstDir + os.sep + "parityErrors.txt", "w+")
+        f.writelines(goodRuns)
+        f.close()

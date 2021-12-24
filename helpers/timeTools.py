@@ -49,6 +49,8 @@ class myTimer:
         os.makedirs(dst, exist_ok=True)
         self.dst = dst
 
+        print("Init: ", name)
+
     def start(self):
         assert self.on == False
         self.counter = self.counter + 1
@@ -72,8 +74,9 @@ class myTimer:
         avg = np.mean(diffs)
         total = np.sum(diffs)
 
-        print("Total run time: ", total)
+        print("Current run time: ", diffs[:-1])
         print("Average run time: ", avg)
+        print("Total run time: ", total)
 
         if write:
             headers = helperKeys.timeToolKeys

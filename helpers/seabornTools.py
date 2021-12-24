@@ -75,7 +75,8 @@ def scatterPlot2D(data, title="", dst=None, save=True, show=False, dpi=500, colo
     plt.close(fig)
 
 
-def scatterPlot3D(data, save=True, dst=None, show=False, title="", dpi=500, colours='b', alpha=0.03, labels=None):
+def scatterPlot3D(data, save=True, dst=None, show=False, title="", dpi=500, colours='b', alpha=0.03, labels=None,
+                  cs=None):
     fig = plt.figure()
     ax = fig.add_subplot(121, projection='3d')
     plt.title(title)
@@ -89,7 +90,14 @@ def scatterPlot3D(data, save=True, dst=None, show=False, title="", dpi=500, colo
     ax.set_ylabel('Y-axis')
     ax.set_zlabel('Z-axis')
 
-    ax.scatter(x_vals, y_vals, z_vals, c=colours, marker='o', alpha=alpha)
+    ax.scatter(x_vals, y_vals, z_vals, c=colours, marker='o', alpha=alpha, label=labels)
+
+    if labels is not None:
+        ax2 = fig.add_subplot(122)
+        ax2.axis("off")
+        for _ in range(len(labels)):
+            ax2.plot([], [], 'o', c=cs[_], label=labels[_])
+        ax2.legend()
 
     if save:
         plt.title(title)

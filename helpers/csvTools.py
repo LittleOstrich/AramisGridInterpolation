@@ -19,7 +19,6 @@ def list_to_csv(vals, delim=";"):
         print(vals)
         print(excep)
         raise e
-
     return s
 
 

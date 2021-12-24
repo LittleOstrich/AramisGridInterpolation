@@ -25,7 +25,7 @@ d["save"] = save
 
 N = len(datas)
 numSamples = 100
-se = myTimer("something", ".")
+se = myTimer("createMetadata", ".")
 
 for i in range(N):
     print("Starting iteration: ", i)
