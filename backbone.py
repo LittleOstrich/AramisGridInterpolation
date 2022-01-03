@@ -12,6 +12,7 @@ from skspatial.plotting import plot_3d
 from data.dataLoader import loadAllDataAsArrays
 from datapoints import pointsAsArray, datapoint
 from helpers.seabornTools import scatterPlot3D
+from helpers.timeTools import myTimer
 from paths import DataDir
 
 
@@ -184,7 +185,6 @@ def inFirstSet(x):
     return ret
 
 
-
 def curSet(v1, v2, m):
     ret = None
     if m == 0:
@@ -194,6 +194,7 @@ def curSet(v1, v2, m):
     else:
         assert False
     return ret.copy()
+
 
 def oppSet(v1, v2, m):
     ret = None
@@ -220,6 +221,7 @@ def detSwitch(v1, v2):
 
 def terminateLoop():
     return True
+
 
 def determinePosition(alignedData, curIndices, curV):
     flps = list()  # far left points
@@ -258,12 +260,17 @@ def determinePosition(alignedData, curIndices, curV):
 
     return flps, lps, cps, rps, frps
 
+
 def startNumber(sn, N):
     if sn is None:
         sn = np.random.randint(N)  # start index
     return sn
 
-def constructMatrix(data, k=7, sn=None, hexagonsOnly=False):
+
+def constructMatrix(data, k=7, sn=None, hexagonsOnly=False, debug=False):
+    se = None
+    if debug:
+        se = myTimer("constructMatrixTimer")
     N = len(data)
 
     visited1 = set()
@@ -280,6 +287,7 @@ def constructMatrix(data, k=7, sn=None, hexagonsOnly=False):
     pointMap = np.zeros((N, 2))
     pointMap[sn, 0] = 1000
     pointMap[sn, 1] = 1000
+
     ''''
     The grid is encoded inside the pointMap. 
         Even indices relate to next1
@@ -287,9 +295,9 @@ def constructMatrix(data, k=7, sn=None, hexagonsOnly=False):
     '''
 
     # Crude way to avoid an endless loop
-    iterationsMax = 30000
+    iterationsMax = 30000  # sensible value is necessary, value has to big enough?
     iterationsCur = 0
-
+    debugStepSize = 10
     switch = 0
     ''''
     This flag determines if a point p belongs to either set next1 or next2.
@@ -299,6 +307,9 @@ def constructMatrix(data, k=7, sn=None, hexagonsOnly=False):
     '''
 
     while len(next1) != 0 or len(next2) != 0:
+        if debug:
+            if iterationsCur % debugStepSize == 0:
+                se.start()
         if iterationsCur > iterationsMax:
             break
 
@@ -319,8 +330,16 @@ def constructMatrix(data, k=7, sn=None, hexagonsOnly=False):
         curIndices = indices[curInd]
         alignedData = alignData(data[curIndices])
 
-
         flps, lps, cps, rps, frps = determinePosition(alignedData, curIndices, curV)
+
+        if hexagonsOnly:
+            assert k == 7
+
+            if len(flps) != 0 or len(frps) != 0:
+                #                iterationsCur = iterationsCur + 1
+                next1 = curS.copy()
+                next2 = oppS.copy()
+                continue
 
         # update pointMap
         # get relative coordinates
@@ -435,6 +454,11 @@ def constructMatrix(data, k=7, sn=None, hexagonsOnly=False):
                 bottomNeighbour = int(bottomNeighbour)
                 pointMap[bottomNeighbour, 0] = int(curIndX)
                 pointMap[bottomNeighbour, 1] = int(curIndY - 2)
+
+        if debug:
+            if iterationsCur % debugStepSize == 0:
+                se.end()
+                print("iterationsCur: ", iterationsCur)
         iterationsCur = iterationsCur + 1
 
         visited1 = curV.copy()
@@ -442,6 +466,7 @@ def constructMatrix(data, k=7, sn=None, hexagonsOnly=False):
         next1 = curS.copy()
         next2 = oppS.copy()
 
+    print("Done with constructMatrix")
     return visited1, visited2, pointMap
 
 
@@ -452,5 +477,4 @@ def test():
 
     constructMatrix(data)
 
-
-#test()
+# test()

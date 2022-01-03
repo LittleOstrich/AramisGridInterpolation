@@ -11,10 +11,10 @@ from metadata.metadataHelper import findBestKForKMeans, countsByCluster, visuali
     viewTransformedDataSurroundings, countHexagones, colourDataByShape, viewPointMaps
 from paths import DataDir, metadataDir
 
+src = DataDir.cleanSamples
 show = False
 save = True
 dpi = 500
-src = DataDir.cleanSamples
 
 datas = loadAllDataAsArrays(src=src, normalizeData=False)
 dataNames = os.listdir(src)
@@ -33,7 +33,8 @@ for i in range(N):
 
     d["data"] = np.copy(data)
     d["dstDir"] = metadataDir.sampleAnalysis + os.sep + dataNames[i][:-4]
-
+    d["hexagonsOnly"] = False
+    d["debug"] = False
     # findBestKForKMeans(**d)
     # computeCountsTest(**d)
     # visualizeCounts(**d)
@@ -46,10 +47,10 @@ for i in range(N):
     # viewTrans,formedDataSurroundings(d["data"], d["dstDir"])
     # countHexagones(d["data"], d["dstDir"])
     se.start()
-    viewPointMaps(d["data"], d["dstDir"])
+    viewPointMaps(d["data"], d["dstDir"], d["hexagonsOnly"], d["debug"])
     se.end()
-    
-    print(d["dstDir"])
+
+    print(d)
     print("Done with iteration: ", i)
     print("--------------")
     print()

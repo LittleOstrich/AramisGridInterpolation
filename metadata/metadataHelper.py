@@ -1,6 +1,6 @@
 import time
 
-from helpers.numpyTools import safeIndexing
+from helpers.numpyTools import safeIndexing, saveConcate
 from helpers.timeTools import myTimer
 
 
@@ -378,7 +378,7 @@ def randomHexagonSampling(data, dstDir, withCenter=True):
         rngSamIndices = indices[rngSamIndex, :]
         chosenSamples = data[rngSamIndices]
 
-        title = str(rngSamIndex) + ".png"
+        title = str(rngSamIndex) + ".jpg"
         createScatterPlot(data=chosenSamples, title=title, dst=dstDir,
                           save=True, show=False, dpi=500, colours=None,
                           labels=None, alpha=1.0)
@@ -421,7 +421,7 @@ def detailedRandomHexagonSampling(data, dstDir, numSamples=100, withCenter=True)
 
         rngSamDists = dists[rngSamIndex, :]
 
-        title = str(rngSamIndex) + ".png"
+        title = str(rngSamIndex) + ".jpg"
         createScatterPlot(data=chosenSamples, title=title, dst=dstDir,
                           save=True, show=False, dpi=500, colours=None,
                           labels=None, alpha=1.0)
@@ -460,7 +460,7 @@ def viewTransformedDataSurroundings(data, dstDir, nnn=6):
 
         newData = newData[:, :2]
         newData = newData - newData[0]
-        title = str(i) + ".png"
+        title = str(i) + ".jpg"
         createScatterPlot(data=newData, title=title, dst=dstDir,
                           save=True, show=False, dpi=500, colours=None,
                           labels=None, alpha=1.0)
@@ -631,13 +631,17 @@ def colourDataByShape(data, dstDir, nnn=6):
             print(i, farleft, leftCount, centerCount, rightCount, farright)
             assert False
     colours = np.array(colours)
-    scatterPlot3D(data, dst=dstDir, title="visualization1.png", colours=colours, alpha=0.5)
-    scatterPlot3D(data, dst=dstDir, title="visualization2.png", colours=colours, alpha=0.25)
-    scatterPlot3D(data, dst=dstDir, title="visualization3.png", colours=colours, alpha=0.03)
+    scatterPlot3D(data, dst=dstDir, title="visualization1.jpg", colours=colours, alpha=0.5)
+    scatterPlot3D(data, dst=dstDir, title="visualization2.jpg", colours=colours, alpha=0.25)
+    scatterPlot3D(data, dst=dstDir, title="visualization3.jpg", colours=colours, alpha=0.03)
 
 
-def viewPointMaps(data, dstDir):
-    dstDir = dstDir + os.sep + "viewPointMaps"
+def viewPointMaps(data, dstDir, hexagonsOnly=False, debug=False):
+    if hexagonsOnly:
+        dstDir = dstDir + os.sep + "viewPointMapsHexagonsOnly"
+    else:
+        dstDir = dstDir + os.sep + "viewPointMaps"
+
     if os.path.exists(dstDir):
         removeDir(dstDir)
         time.sleep(1)
@@ -651,17 +655,17 @@ def viewPointMaps(data, dstDir):
     for i in [1100, 0, 3000, 1556]:
         print("Starting with: ", str(i))
         se.start()
-        visited1, visited2, pointMap = constructMatrix(data, k=7, sn=i, hexagonsOnly=False)
+        visited1, visited2, pointMap = constructMatrix(data, k=7, sn=i, hexagonsOnly=hexagonsOnly, debug=debug)
         se.end()
 
         evenIndexed = np.array(list(visited1)).astype(int)
         evenData = data[evenIndexed]
-        scatterPlot3D(evenData, show=False, dst=dstDir, title=str(i) + "_even.png", colours='b', alpha=0.5)
+        scatterPlot3D(evenData, show=False, dst=dstDir, title=str(i) + "_even.jpg", colours='b', alpha=0.5)
         np.save(dstDir + os.sep + str(i) + "_evenData", evenData)
 
         oddIndexed = np.array(list(visited2)).astype(int)
         oddData = data[oddIndexed]
-        scatterPlot3D(oddData, show=False, dst=dstDir, title=str(i) + "_odd.png", colours='b', alpha=0.5)
+        scatterPlot3D(oddData, show=False, dst=dstDir, title=str(i) + "_odd.jpg", colours='b', alpha=0.5)
         np.save(dstDir + os.sep + str(i) + "_oddData", oddData)
 
         visited = np.concatenate([evenIndexed, oddIndexed])
@@ -710,9 +714,9 @@ def viewPointMaps(data, dstDir):
 
         labels = ["true evens", "true odds", "false evens", "false odds", "irregulars"]
 
-        combinedData = np.concatenate([trueEvens, trueOdds, falseEvens, falseOdds, irregularPoints])
+        combinedData = saveConcate([trueEvens, trueOdds, falseEvens, falseOdds, irregularPoints])
 
-        scatterPlot3D(combinedData, show=False, dst=dstDir, title=str(i) + "_combinedDetailed.png",
+        scatterPlot3D(combinedData, show=False, dst=dstDir, title=str(i) + "_combinedDetailed.jpg",
                       colours=colours, cs=colourSpace, alpha=0.03, labels=labels)
 
         labels = ["evens", "odds", "irregulars"]
@@ -720,7 +724,7 @@ def viewPointMaps(data, dstDir):
         colors = [cs[0] for _ in evenData] + [cs[1] for _ in oddData] + \
                  [cs[2] for _ in irregularPointsIndices]
         combinedData = np.concatenate([evenData, oddData, irregularPoints])
-        scatterPlot3D(combinedData, show=False, dst=dstDir, title=str(i) + "_combinedSimple.png", colours=colors,
+        scatterPlot3D(combinedData, show=False, dst=dstDir, title=str(i) + "_combinedSimple.jpg", colours=colors,
                       alpha=0.03, labels=labels, cs=cs)
 
         xs = np.concatenate(
@@ -734,7 +738,7 @@ def viewPointMaps(data, dstDir):
 
         xys = np.concatenate([xs, ys], axis=1)
 
-        scatterPlot2D(xys, show=False, dst=dstDir, title=str(i) + "_pointMap.png", colours=colors, alpha=0.03)
+        scatterPlot2D(xys, show=False, dst=dstDir, title=str(i) + "_pointMap.jpg", colours=colors, alpha=0.03)
 
         parities = ["parity"]
         for v in visited:

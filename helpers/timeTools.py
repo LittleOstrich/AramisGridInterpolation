@@ -74,7 +74,7 @@ class myTimer:
         avg = np.mean(diffs)
         total = np.sum(diffs)
 
-        print("Current run time: ", diffs[:-1])
+        print("Current run time: ", diffs[-1])
         print("Average run time: ", avg)
         print("Total run time: ", total)
 
