@@ -1,3 +1,6 @@
+import os.path
+
+from PIL import Image
 import numpy as np
 
 
@@ -18,7 +21,22 @@ def saveConcate(args, axis=0):
 
     arrays = list()
     for arg in args:
-        if np.asarray(arg.shape)[hp] == desShape:
-            arrays.append(arg)
+        curShape = np.asarray(arg.shape)
+        if len(curShape) >= hp + 1:
+            if curShape[hp] == desShape:
+                arrays.append(arg)
     concatedArray = np.concatenate(arrays, axis=axis)
     return concatedArray
+
+
+def matrixAsImage(A, show=False, save=True, dstDir=None, fn=None):
+    img = Image.fromarray(A, "L")
+
+    if show:
+        img.show()
+    if save:
+        assert os.path.exists(dstDir)
+        assert fn is not None
+        dst = dstDir + os.sep + fn
+        img.save(dst, "png")
+    return img

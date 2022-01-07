@@ -9,9 +9,9 @@ def createDataSubFoldersSnippet():
     print("Done with: createDataSubFoldersSnippet")
 
 
-def parseAllRawDreieckDataCsvsSnippet():
-    parseAllRawDreieckDataCsvs()
+def parseAllRawDreieckDataCsvsSnippet(srcDir, dstDir):
+    parseAllRawDreieckDataCsvs(srcDir=srcDir, dstDir=dstDir)
 
 
 # createDataSubFoldersSnippet()
-parseAllRawDreieckDataCsvsSnippet()
+parseAllRawDreieckDataCsvsSnippet(srcDir=paths.DataDir.rawLFT1086, dstDir=paths.DataDir.cleanLFT1086)

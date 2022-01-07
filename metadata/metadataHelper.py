@@ -1,16 +1,8 @@
 import time
 
-from helpers.numpyTools import safeIndexing, saveConcate
+from helpers.converter import pointMapToMatrix, centerPointMap, centeredPointMapToMatrix, storeVisualizedPointMap
+from helpers.numpyTools import safeIndexing, saveConcate, matrixAsImage
 from helpers.timeTools import myTimer
-
-
-class metadataDsts:
-    scPlot = "scatterplots"
-    pr = "projections"
-    hg = "histograms"
-    spc = "samplesPerCluster"
-    nnCount = "nearestNeighboursCountsCsv"
-
 
 import os
 
@@ -25,6 +17,18 @@ from helpers.csvTools import csv_to_xlsx, listsToCsv
 from helpers.general_tools import getColours, sciF, execFunctionOnMatrix, removeDir
 from helpers.seabornTools import createScatterPlot, plotHistogram, nearestNeighbourscatterPlot, scatterPlot3D, \
     scatterPlot2D
+
+
+class metadataDsts:
+    scPlot = "scatterplots"
+    pr = "projections"
+    hg = "histograms"
+    spc = "samplesPerCluster"
+    nnCount = "nearestNeighboursCountsCsv"
+    checkGridStructure = "checkGridStructure"
+    checkGridStructureHexagonsOnly = "checkGridStructureHexagonsOnly"
+    viewPointMapsHexagonsOnly = "viewPointMapsHexagonsOnly"
+    viewPointMaps = "viewPointMaps"
 
 
 def createScattterPlots(data, dstDir=None, show=False, save=True, dpi=500):
@@ -502,6 +506,8 @@ def veryWeird(farleft, leftCount, centerCount, rightCount, farright):
 
 
 def countHexagones(data, dstDir, nnn=6):
+    print("Count Hexagones dstDir: ", dstDir)
+
     N = len(data)
     dstDir = dstDir + os.sep + "localShape"
     if os.path.exists(dstDir):
@@ -545,6 +551,7 @@ def countHexagones(data, dstDir, nnn=6):
             elif p[0] < -0.75:
                 farleft = farleft + 1
             else:
+                print(p, dstDir, )
                 assert False
 
         if centerCount == 3 and leftCount == 2 and rightCount == 2:
@@ -636,7 +643,38 @@ def colourDataByShape(data, dstDir, nnn=6):
     scatterPlot3D(data, dst=dstDir, title="visualization3.jpg", colours=colours, alpha=0.03)
 
 
-def viewPointMaps(data, dstDir, hexagonsOnly=False, debug=False):
+def createPointMaps(data, dstDir, hexagonsOnly=False, overwrite=False, debug=False):
+    if hexagonsOnly:
+        dstDir = dstDir + os.sep + "pointMapsHexagonsOnly"
+    else:
+        dstDir = dstDir + os.sep + "pointMaps"
+
+    if os.path.exists(dstDir):
+        removeDir(dstDir)
+        time.sleep(1)
+    os.makedirs(dstDir, exist_ok=True)
+
+    N = len(data)
+
+    goodRuns = list()
+    se = myTimer("pointMapsTimer")
+    # for i in range(0, N, 100):
+    for i in [1100, 0, 3000, 1556]:
+        print("Starting with: ", str(i))
+        se.start()
+        visited1, visited2, pointMap = constructMatrix(data, k=7, sn=i, hexagonsOnly=hexagonsOnly, debug=debug)
+        se.end()
+
+        visitedEvenpath = dstDir + os.sep + "visitedEven" + "_" + str(i)
+        visitedOddpath = dstDir + os.sep + "visitedOdd" + "_" + str(i)
+        pointMapPath = dstDir + os.sep + "pointMap" + "_" + str(i)
+
+        np.save(visitedEvenpath, visited1)
+        np.save(visitedOddpath, visited2)
+        np.save(pointMapPath, pointMap)
+
+
+def viewPointMaps(data, dstDir, hexagonsOnly=False, overwrite=False, debug=False):
     if hexagonsOnly:
         dstDir = dstDir + os.sep + "viewPointMapsHexagonsOnly"
     else:
@@ -779,3 +817,35 @@ def viewPointMaps(data, dstDir, hexagonsOnly=False, debug=False):
         f = open(dstDir + os.sep + "parityErrors.txt", "w+")
         f.writelines(goodRuns)
         f.close()
+
+
+def checkGridStructure(data, dstDir, hexagonsOnly=False, overwrite=False, debug=False):
+    if hexagonsOnly:
+        dstDir = dstDir + os.sep + "checkGridStructureHexagonsOnly"
+    else:
+        dstDir = dstDir + os.sep + "checkGridStructure"
+
+    if os.path.exists(dstDir):
+        removeDir(dstDir)
+        time.sleep(1)
+    os.makedirs(dstDir, exist_ok=True)
+
+    N = len(data)
+
+    fnTemplate = "gridStructure_startingPoint {} percentile {}.png"
+
+    goodRuns = list()
+    se = myTimer("checkGridStructureTimer")
+    # for i in range(0, N, 100):
+
+    startingPoints = [0, 1100, 1556, 3000]
+    percentiles = [80, 90, 95, 100]
+    for i in startingPoints:
+        print("Starting with: ", str(i))
+        se.start()
+        visited1, visited2, pointMap = constructMatrix(data, k=7, sn=i, hexagonsOnly=hexagonsOnly, debug=debug)
+        se.end()
+
+        for p in percentiles:
+            fn = fnTemplate.format(i, p)
+            storeVisualizedPointMap(pointMap, p, tS=20, save=True, show=False, dstDir=dstDir, fn=fn)

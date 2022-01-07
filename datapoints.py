@@ -65,6 +65,3 @@ class datapoint:
                         self.top = p.y
             else:
                 print("Anomaly detected! PointId: ", self.originalIndex)
-
-
-pass

@@ -7,7 +7,7 @@ from paths import projectBase, DataDir
 import numpy as np
 
 
-def loadAllDataAsDfs(src=DataDir.cleanSamples):
+def loadAllDataAsDfs(src, N=100):
     files = os.listdir(src)
     dfs = list()
 
@@ -18,15 +18,21 @@ def loadAllDataAsDfs(src=DataDir.cleanSamples):
             df = readCsv(ffp)
             dfs.append(df)
 
+        if len(dfs) == N:
+            break
+            
     return dfs
 
 
-def loadAllDataAsArrays(src=DataDir.cleanSamples, normalizeData=True):
+def loadAllDataAsArrays(src, normalizeData=True, N=100):
     dfs = loadAllDataAsDfs(src=src)
     arrs = list()
     for df in dfs:
         arr = dataDfToArray(df, normalizeData)
         arrs.append(arr)
+        if len(arrs) == N:
+            break
+
     return arrs
 
 

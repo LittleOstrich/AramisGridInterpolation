@@ -99,7 +99,11 @@ def match_row_to_dataframe2(row, df: pd.DataFrame, keys):
 
 
 def readCsv(fn, header=0, delimiter=";", engine='python'):
-    df = pd.read_csv(fn, header=header, delimiter=delimiter, engine=engine)
+    try:
+        df = pd.read_csv(fn, header=header, delimiter=delimiter, engine=engine)
+    except Exception as e:
+        print("Arguments: ", fn, header, delimiter, engine)
+        raise e
     return df
 
 

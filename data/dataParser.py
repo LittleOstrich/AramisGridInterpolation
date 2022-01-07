@@ -1,5 +1,6 @@
 import os
 
+from helpers.timeTools import myTimer
 from paths import DataDir
 
 newHeaders = [0, 1, 2, 3, 4, 5, 6]
@@ -22,9 +23,10 @@ def createDataSubFolders():
     return rawSamples
 
 
-def parseDreieckDataCsv(src, dst):
+def parseDreieckDataCsv(src, dst, createSubFolders=False):
     print("Creating subfolders...")
-    createDataSubFolders()
+    if createSubFolders:
+        createDataSubFolders()
 
     print("Reading: ", src)
 
@@ -40,23 +42,26 @@ def parseDreieckDataCsv(src, dst):
         if readInOk:
             newLine = line.replace("\t", ";")
             newLines.append(newLine)
-    print(newLines)
+    # print(newLines)
     srcFile.close()
 
-    dstFile = open(dst, "w")
+    dstFile = open(dst, "w+")
     dstFile.writelines(newLines)
     dstFile.close()
     print("Done creating all Data")
 
 
-def parseAllRawDreieckDataCsvs():
-    rawSamples = os.listdir(DataDir.rawSamples)
+def parseAllRawDreieckDataCsvs(srcDir=DataDir.rawSamples, dstDir=DataDir.cleanSamples):
+    rawSamples = os.listdir(srcDir)
     N = len(rawSamples)
+    parseTimer = myTimer(name="parseTimer", reportFrequency=10)
     for i in range(N):
+        parseTimer.start()
         name = rawSamples[i]
-        src = DataDir.rawSamples + os.sep + name
-        dst = DataDir.cleanSamples + os.sep + name.split(".")[0] + os.sep + name
+        src = srcDir + os.sep + name
+        dst = dstDir + os.sep + name
         parseDreieckDataCsv(src=src, dst=dst)
+        parseTimer.end()
 
 
 def parseAscFile(src):

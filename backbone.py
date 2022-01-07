@@ -250,7 +250,9 @@ def determinePosition(alignedData, curIndices, curV):
             elif isFarright(lx):
                 frps.append(nbInd)
             else:
-                continue
+                print(curIndices)
+                print(alignedData)
+                assert False
 
     flps = np.array(flps)  # far left points
     lps = np.array(lps)  # left points
@@ -299,13 +301,13 @@ def constructMatrix(data, k=7, sn=None, hexagonsOnly=False, debug=False):
     iterationsCur = 0
     debugStepSize = 10
     switch = 0
+
     ''''
     This flag determines if a point p belongs to either set next1 or next2.
     By definition: 
         p==0 means p belongs to next1, 
         p==1 means p belongs to next2
     '''
-
     while len(next1) != 0 or len(next2) != 0:
         if debug:
             if iterationsCur % debugStepSize == 0:
@@ -322,8 +324,6 @@ def constructMatrix(data, k=7, sn=None, hexagonsOnly=False, debug=False):
         curV = curSet(visited1, visited2, switch)
         oppV = oppSet(visited1, visited2, switch)
 
-        # collect neighbours
-
         curInd = curS.pop()
         curV.add(curInd)
 
@@ -336,7 +336,7 @@ def constructMatrix(data, k=7, sn=None, hexagonsOnly=False, debug=False):
             assert k == 7
 
             if len(flps) != 0 or len(frps) != 0:
-                #                iterationsCur = iterationsCur + 1
+                # iterationsCur = iterationsCur + 1
                 next1 = curS.copy()
                 next2 = oppS.copy()
                 continue

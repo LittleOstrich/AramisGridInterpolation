@@ -39,7 +39,7 @@ def date():
 
 class myTimer:
 
-    def __init__(self, name, dst="temp", saveReport=False):
+    def __init__(self, name, dst="temp", saveReport=False, reportFrequency=1):
         self.name = name
         self.counter = 0
         self.starts = list()
@@ -48,6 +48,7 @@ class myTimer:
 
         os.makedirs(dst, exist_ok=True)
         self.dst = dst
+        self.reportFrequency = reportFrequency
 
         print("Init: ", name)
 
@@ -63,7 +64,9 @@ class myTimer:
         e = time.time()
         self.ends.append(e)
         self.on = False
-        self.report()
+
+        if self.counter % self.reportFrequency == 0:
+            self.report()
 
     def report(self, write=False):
         starts = np.array(self.starts)
