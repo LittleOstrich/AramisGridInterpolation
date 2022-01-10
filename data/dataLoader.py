@@ -20,8 +20,15 @@ def loadAllDataAsDfs(src, N=100):
 
         if len(dfs) == N:
             break
-            
     return dfs
+
+
+def loadDataByPath(src):
+    ffp = src
+    df = None
+    if ffp.endswith(".csv"):
+        df = readCsv(ffp)
+    return df
 
 
 def loadAllDataAsArrays(src, normalizeData=True, N=100):
@@ -32,7 +39,6 @@ def loadAllDataAsArrays(src, normalizeData=True, N=100):
         arrs.append(arr)
         if len(arrs) == N:
             break
-
     return arrs
 
 

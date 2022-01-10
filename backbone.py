@@ -413,7 +413,7 @@ def constructMatrix(data, k=7, sn=None, hexagonsOnly=False, debug=False):
                 frp = frps[j]
                 dist = np.abs(data[frp][0] - data[curInd][0])
                 frpDists[j] = dist
-            rNb = np.argmin(frpDists)  # right neighbour
+            rNb = np.argmin(frpDists)  # far right neighbour
             pointMap[frps[rNb], 0] = curIndX + 2
             pointMap[frps[rNb], 1] = curIndY
             curS.add(frps[rNb])

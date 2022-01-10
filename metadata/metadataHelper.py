@@ -820,6 +820,9 @@ def viewPointMaps(data, dstDir, hexagonsOnly=False, overwrite=False, debug=False
 
 
 def checkGridStructure(data, dstDir, hexagonsOnly=False, overwrite=False, debug=False):
+    se = myTimer("checkGridStructureTimer")
+    se.start()
+
     if hexagonsOnly:
         dstDir = dstDir + os.sep + "checkGridStructureHexagonsOnly"
     else:
@@ -835,17 +838,15 @@ def checkGridStructure(data, dstDir, hexagonsOnly=False, overwrite=False, debug=
     fnTemplate = "gridStructure_startingPoint {} percentile {}.png"
 
     goodRuns = list()
-    se = myTimer("checkGridStructureTimer")
     # for i in range(0, N, 100):
 
-    startingPoints = [0, 1100, 1556, 3000]
-    percentiles = [80, 90, 95, 100]
+    startingPoints = [0, 3000]
+    percentiles = [100]
     for i in startingPoints:
         print("Starting with: ", str(i))
-        se.start()
         visited1, visited2, pointMap = constructMatrix(data, k=7, sn=i, hexagonsOnly=hexagonsOnly, debug=debug)
-        se.end()
 
         for p in percentiles:
             fn = fnTemplate.format(i, p)
             storeVisualizedPointMap(pointMap, p, tS=20, save=True, show=False, dstDir=dstDir, fn=fn)
+    se.end()

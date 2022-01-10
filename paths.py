@@ -1,7 +1,7 @@
 import os
 
 projectBase = "C:\\Users\\geiss\\OneDrive\\Desktop\\LainProject\\Python\\AramisGridInterpolation"
-projectBaseExtern = "E:\\AramisInterpolation"
+projectBaseExtern = "F:\\AramisInterpolation"
 
 
 class projectDirs:
@@ -42,7 +42,7 @@ class DataDir:
     samplesOld = base + os.sep + "samplesOld"
 
     rawLFT1086 = base + os.sep + "LFT1086-ZV-0-9"
-    cleanLFT1086 = "E:\\AramisInterpolation\\cleanedData\\LFT1086-ZV-0-9"
+    cleanLFT1086 = "F:\\AramisInterpolation\\cleanedData\\LFT1086-ZV-0-9"
 
     subDirs = [cleanSamples, rawSamples, samplesOld, rawLFT1086, cleanLFT1086]
 
