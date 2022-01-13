@@ -5,21 +5,24 @@ import numpy as np
 import warnings
 import logging
 
+import paths
+
 logging.getLogger().setLevel(logging.CRITICAL)
 
 from backbone import alignData
-from data.dataLoader import loadAllDataAsArrays, dataDfToArray, loadDataByPath
+from data.dataLoader import loadAllDataAsArrays, retrieveVoxels, loadDataByPath
 from helpers.general_tools import execFunctionOnMatrix, sciF
 from helpers.timeTools import myTimer
 from metadata.metadataHelper import findBestKForKMeans, countsByCluster, visualizeCounts, createProjectedDataHistograms, \
     computeCountsTest, createScattterPlots, saveDistances, randomHexagonSampling, detailedRandomHexagonSampling, \
-    viewTransformedDataSurroundings, countHexagones, colourDataByShape, viewPointMaps, checkGridStructure
+    viewTransformedDataSurroundings, countHexagones, colourDataByShape, viewPointMaps, checkGridStructure, \
+    createInterpolation, createHeatmapForInterpolatedPoints
 from paths import DataDir, metadataDir, metadataDirExtern
 
-# src = DataDir.cleanSamples
-# dstDir = metadataDir.sampleAnalysis
-src = DataDir.cleanLFT1086
-dstDir = metadataDirExtern.base
+src = DataDir.interpolatedData
+dstDir = metadataDir.sampleAnalysis
+# src = DataDir.cleanLFT1086
+# dstDir = metadataDirExtern.base
 
 show = False
 save = True
@@ -32,44 +35,55 @@ files = os.listdir(src)
 d = dict()
 d["show"] = show
 d["save"] = save
-
+debug = True
 N = len(files)
 # numSamples = 100
 se = myTimer("createMetadata", ".")
 overwrite = False
 # 85
-for i in range(N):
+for i in range(0, N):
+    se.start()
     try:
         print("Starting iteration: ", i)
         ffp = src + os.sep + files[i]
         data = loadDataByPath(ffp)
-        data = dataDfToArray(data, normalizeData=False)
+        data = retrieveVoxels(data, normalizeData=False)
 
         d["data"] = np.copy(data)
-        d["dstDir"] = dstDir + os.sep + files[i][:-4]
+
+        srcDir = paths.DataDir.interpolatedData + os.sep + files[i][:-4]
+        dstDir = paths.metadataDir.interpolatedDataAnalysis + os.sep + files[i][:-4]
+
         d["hexagonsOnly"] = False
         d["debug"] = False
         d["overwrite"] = overwrite
-        # findBestKForKMeans(**d)
-        # computeCountsTest(**d)
-        # visualizeCounts(**d)
-        # countsByCluster(**d)
-        # createScattterPlots(**d)
-        # createProjectedDataHistograms(**d)
-        #
-        # saveDistances(d["data"], d["dstDir"])
-        se.start()
-        # detailedRandomHexagonSampling(d["data"], d["dstDir"], numSamples=numSamples)
-        # viewTransformedDataSurroundings(d["data"], d["dstDir"])
-        # countHexagones(d["data"], d["dstDir"])
-        # viewPointMaps(d["data"], d["dstDir"], d["hexagonsOnly"], d["debug"], d["overwrite"])
-        checkGridStructure(d["data"], d["dstDir"], d["hexagonsOnly"], d["debug"], d["overwrite"])
-        se.end()
+        d["ffp"] = ffp
 
+        # createInterpolation(data, ffp, dstDir, overwrite=False)
+        findBestKForKMeans(data, dstDir=dstDir, show=False, save=True)
+        computeCountsTest(data, dstDir=dstDir, show=False, save=True)
+        visualizeCounts(data, dstDir=dstDir, show=False, save=True)
+        countsByCluster(data, dstDir=dstDir, show=False, save=True)
+        createScattterPlots(data, dstDir=dstDir, show=False, save=True)
+        createProjectedDataHistograms(data, dstDir=dstDir, show=False, save=True)
+
+        saveDistances(data, dstDir, save=True)
+
+        # detailedRandomHexagonSampling(data, dstDir=dstDir, show=False, save=False, numSamples=numSamples)
+        viewTransformedDataSurroundings(data, dstDir=dstDir)
+        countHexagones(data, dstDir=dstDir)
+        viewPointMaps(data, dstDir, d["hexagonsOnly"], d["debug"], d["overwrite"])
+        checkGridStructure(data, dstDir, d["hexagonsOnly"], d["debug"], d["overwrite"])
+        createHeatmapForInterpolatedPoints(srcDir=srcDir,
+                                           dstDir=d["dstDir"])
         # print(d)
         print("Done with iteration: ", i)
         print("--------------")
         print()
     except Exception as e:
         print(traceback.format_exc())
+        if debug:
+            raise e
+    se.end()
+
 print("Finally done")

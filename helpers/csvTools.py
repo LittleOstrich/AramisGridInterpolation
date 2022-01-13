@@ -45,7 +45,8 @@ def listsToCsv(lists, dst="temp" + os.sep + "defaultName.csv", withDate=False, d
         ffp = addDateToFn(ffp)
 
     if deleteIfExists:
-        os.remove(ffp)
+        if os.path.exists(ffp):
+            os.remove(ffp)
 
     f = open(ffp, "a+")
     for i in range(numRows):
@@ -82,6 +83,11 @@ def select_rows_by_dict(df: pd.DataFrame, d: dict):
     return matches
 
 
+def dataframeToDicts(df):
+    dicts = df.to_dict('records')
+    return dicts
+
+
 def match_row_to_dataframe2(row, df: pd.DataFrame, keys):
     matches = pd.DataFrame(df.keys().tolist())
     N = len(df)
@@ -111,16 +117,19 @@ loadDataframe = readCsv
 
 
 def writeCsv(df: pd.DataFrame, dst, fn):
-    df.to_csv("n_clusters.csv", sep=";")
+    ffp = dst + os.sep + fn
+    if not ffp.endswith(".csv"):
+        ffp = ffp + ".csv"
+    df.to_csv(ffp, sep=";")
 
 
-def writeDataframeToXlsx(df: pd.DataFrame, dst, fn):
-    if fn.endswith(".csv"):
+def writeDataframeToXlsx(df: pd.DataFrame, dst, fn, index=False):
+    if fn.endswith(".xlsx"):
         pass
     else:
-        fn = fn + ".csv"
+        fn = fn + ".xlsx"
     fp = dst + os.sep + fn
-    df.to_xlsx(fp, index=False)
+    df.to_excel(fp, index=index)
 
 
 def csv_to_xlsx(src, dst=None, debug=False):
@@ -192,6 +201,12 @@ def append_dict_to_csv(fn, dic: dict, delim=";", out=False):
         print(row)
     append_row_to_csv(fn, row, delim)
     return row
+
+
+def appendDictsToDf(dicts, df: pd.DataFrame):
+    for d in dicts:
+        df = df.append(d, ignore_index=True)
+    return df
 
 
 def csv_to_list_of_dicts(fn):

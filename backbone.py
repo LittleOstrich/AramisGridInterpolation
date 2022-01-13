@@ -286,7 +286,7 @@ def constructMatrix(data, k=7, sn=None, hexagonsOnly=False, debug=False):
     sn = startNumber(sn, N)  # start index
     next1.add(sn)
 
-    pointMap = np.zeros((N, 2))
+    pointMap = np.zeros((N, 2), dtype=int)
     pointMap[sn, 0] = 1000
     pointMap[sn, 1] = 1000
 

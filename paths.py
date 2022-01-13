@@ -40,11 +40,11 @@ class DataDir:
     cleanSamples = base + os.sep + "cleanSamples"
     rawSamples = base + os.sep + "rawSamples"
     samplesOld = base + os.sep + "samplesOld"
-
+    interpolatedData = base + os.sep + "interpolatedData"
     rawLFT1086 = base + os.sep + "LFT1086-ZV-0-9"
     cleanLFT1086 = "F:\\AramisInterpolation\\cleanedData\\LFT1086-ZV-0-9"
 
-    subDirs = [cleanSamples, rawSamples, samplesOld, rawLFT1086, cleanLFT1086]
+    subDirs = [cleanSamples, rawSamples, samplesOld, rawLFT1086, interpolatedData, cleanLFT1086]
 
 
 class metadataDir:
@@ -53,8 +53,8 @@ class metadataDir:
     base = AramisGrindInterpolationDir.base + os.sep + dirname
 
     sampleAnalysis = base + os.sep + "sampleAnalysis"
-
-    subdirs = [sampleAnalysis]
+    interpolatedDataAnalysis = base + os.sep + "interpolatedDataAnalysis"
+    subdirs = [sampleAnalysis, interpolatedDataAnalysis]
 
 
 class metadataDirExtern:

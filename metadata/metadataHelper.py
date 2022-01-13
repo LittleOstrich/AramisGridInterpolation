@@ -1,5 +1,8 @@
 import time
 
+from matplotlib import cm
+
+from data.dataLoader import retrieveDisplacement, retrieveVoxels
 from helpers.converter import pointMapToMatrix, centerPointMap, centeredPointMapToMatrix, storeVisualizedPointMap
 from helpers.numpyTools import safeIndexing, saveConcate, matrixAsImage
 from helpers.timeTools import myTimer
@@ -13,10 +16,11 @@ from sklearn.cluster import KMeans
 from sklearn.metrics import silhouette_score, calinski_harabasz_score, davies_bouldin_score
 
 from backbone import computeNearestNeighboursMatrix, alignData, constructMatrix
-from helpers.csvTools import csv_to_xlsx, listsToCsv
+from helpers.csvTools import csv_to_xlsx, listsToCsv, loadDataframe, dataframeToDicts, writeDataframeToXlsx, writeCsv
 from helpers.general_tools import getColours, sciF, execFunctionOnMatrix, removeDir
 from helpers.seabornTools import createScatterPlot, plotHistogram, nearestNeighbourscatterPlot, scatterPlot3D, \
     scatterPlot2D
+from interpolate import interpolate
 
 
 class metadataDsts:
@@ -29,14 +33,25 @@ class metadataDsts:
     checkGridStructureHexagonsOnly = "checkGridStructureHexagonsOnly"
     viewPointMapsHexagonsOnly = "viewPointMapsHexagonsOnly"
     viewPointMaps = "viewPointMaps"
+    createInterpolation = "createInterpolation"
+    createHeatmapForInterpolatedPoints = "createHeatmapForInterpolatedPoints"
 
 
-def createScattterPlots(data, dstDir=None, show=False, save=True, dpi=500):
+def createScattterPlots(data, dstDir=None, show=False, save=True, dpi=500, overwrite=False):
     dstDir = dstDir + os.sep + "scatterPlots"
     dd2d = "dreieckData2d"
     dd3d = "dreieckData3d"
     vd2d = "viereckData2d"
     vd3d = "viereckData3d"
+
+    if os.path.exists(dstDir):
+        if overwrite:
+            removeDir(dstDir)
+            time.sleep(1)
+        else:
+            return
+
+    os.makedirs(dstDir, exist_ok=True)
 
     createScatterPlot(data[:, :2], dst=dstDir, title=dd2d, save=save, show=show, dpi=dpi)
     createScatterPlot(data, title=dd3d, dst=dstDir, save=save, show=show, dpi=dpi)
@@ -101,9 +116,16 @@ def findBestKForKMeans2(data):
     print("Done with: ", findBestKForKMeans2)
 
 
-def findBestKForKMeans(data, dstDir=None, show=False, save=False):
+def findBestKForKMeans(data, dstDir=None, show=False, save=False, overwrite=False):
     print("Starting up: ", "findBestKForKMeans")
     dstDir = dstDir + os.sep + "bestKForKMeans"
+
+    if os.path.exists(dstDir):
+        if overwrite:
+            removeDir(dstDir)
+            time.sleep(1)
+        else:
+            return
     os.makedirs(dstDir, exist_ok=True)
 
     X = np.copy(data[:, :2])
@@ -176,9 +198,15 @@ def computeNotNormalizedNearestNeighboursMatrixTest(data, dstDir=None, show=Fals
     csv_to_xlsx(src=countsCsvFp2)
 
 
-def computeCountsTest(data, dstDir=None, show=False, save=False):
+def computeCountsTest(data, dstDir=None, show=False, save=False, overwrite=False):
     X = np.copy(data)
     dstDir = dstDir + os.sep + "nearestNeighboursCountsAsCsv"
+    if os.path.exists(dstDir):
+        if overwrite:
+            removeDir(dstDir)
+            time.sleep(1)
+        else:
+            return
     os.makedirs(dstDir, exist_ok=True)
 
     (dists, indices) = computeNearestNeighboursMatrix(X)
@@ -213,13 +241,19 @@ def computeCountsTest(data, dstDir=None, show=False, save=False):
     csv_to_xlsx(countsCsvFp)
 
 
-def countsByCluster(data, dstDir=None, show=False, save=False):
+def countsByCluster(data, dstDir=None, show=False, save=False, overwrite=False):
     print("Starting up: ", "countsByCluster")
 
     X = np.copy(data[:, :2])
     X[:, 1] = 0
 
     dstDir = dstDir + os.sep + "countsByCluster"
+    if os.path.exists(dstDir):
+        if overwrite:
+            removeDir(dstDir)
+            time.sleep(1)
+        else:
+            return
     os.makedirs(dstDir, exist_ok=True)
     N = np.min([len(X) - 1, 40])
     for i in range(2, N):
@@ -330,7 +364,7 @@ def visualizeCounts(data, dstDir=None, show=False, save=False):
     plt.close("all")
 
 
-def saveDistances(data, dstDir, save=False):
+def saveDistances(data, dstDir, save=False, overwrite=False):
     X = np.copy(data)
     nnn = 12
     (dists, indices) = computeNearestNeighboursMatrix(X, nnn + 1)
@@ -340,6 +374,12 @@ def saveDistances(data, dstDir, save=False):
     dists = execFunctionOnMatrix(dists, sciF, args)
     fn = "distances.csv"
     dstDir = dstDir + os.sep + "distance"
+    if os.path.exists(dstDir):
+        if overwrite:
+            removeDir(dstDir)
+            time.sleep(1)
+        else:
+            return
     os.makedirs(dstDir, exist_ok=True)
 
     headers = ["id"] + ["dist_" + str(i) for i in range(1, nnn + 2)]
@@ -449,12 +489,15 @@ def detailedRandomHexagonSampling(data, dstDir, numSamples=100, withCenter=True)
     f.close()
 
 
-def viewTransformedDataSurroundings(data, dstDir, nnn=6):
+def viewTransformedDataSurroundings(data, dstDir, nnn=6, overwrite=False):
     N = len(data)
     dstDir = dstDir + os.sep + "viewLocalShape"
     if os.path.exists(dstDir):
-        removeDir(dstDir)
-        time.sleep(1)
+        if overwrite:
+            removeDir(dstDir)
+            time.sleep(1)
+        else:
+            return
     os.makedirs(dstDir, exist_ok=True)
 
     nnn = 6
@@ -505,14 +548,17 @@ def veryWeird(farleft, leftCount, centerCount, rightCount, farright):
         return False
 
 
-def countHexagones(data, dstDir, nnn=6):
+def countHexagones(data, dstDir, nnn=6, overwrite=False):
     print("Count Hexagones dstDir: ", dstDir)
 
     N = len(data)
     dstDir = dstDir + os.sep + "localShape"
     if os.path.exists(dstDir):
-        removeDir(dstDir)
-        time.sleep(1)
+        if overwrite:
+            removeDir(dstDir)
+            time.sleep(1)
+        else:
+            return
     os.makedirs(dstDir, exist_ok=True)
 
     (dists, indices) = computeNearestNeighboursMatrix(data, nnn + 1)
@@ -681,8 +727,11 @@ def viewPointMaps(data, dstDir, hexagonsOnly=False, overwrite=False, debug=False
         dstDir = dstDir + os.sep + "viewPointMaps"
 
     if os.path.exists(dstDir):
-        removeDir(dstDir)
-        time.sleep(1)
+        if overwrite:
+            removeDir(dstDir)
+            time.sleep(1)
+        else:
+            return
     os.makedirs(dstDir, exist_ok=True)
 
     N = len(data)
@@ -829,13 +878,17 @@ def checkGridStructure(data, dstDir, hexagonsOnly=False, overwrite=False, debug=
         dstDir = dstDir + os.sep + "checkGridStructure"
 
     if os.path.exists(dstDir):
-        removeDir(dstDir)
-        time.sleep(1)
+        if overwrite:
+            removeDir(dstDir)
+            time.sleep(1)
+        else:
+            return
     os.makedirs(dstDir, exist_ok=True)
 
     N = len(data)
 
     fnTemplate = "gridStructure_startingPoint {} percentile {}.png"
+    visitedPathTemplate = dstDir + os.sep + "{} startingPoint {} percentile {}"
 
     goodRuns = list()
     # for i in range(0, N, 100):
@@ -849,4 +902,78 @@ def checkGridStructure(data, dstDir, hexagonsOnly=False, overwrite=False, debug=
         for p in percentiles:
             fn = fnTemplate.format(i, p)
             storeVisualizedPointMap(pointMap, p, tS=20, save=True, show=False, dstDir=dstDir, fn=fn)
+
+            np.save(visitedPathTemplate.format("visited1", str(i), str(p), visited1))
+            np.save(visitedPathTemplate.format("visited2", str(i), str(p), visited2))
+            np.save(visitedPathTemplate.format("pointMap", str(i), str(p), pointMap))
+
+            se.end()
+
+
+def createInterpolation(data, ffp, dstDir, hexagonsOnly=False, overwrite=False, debug=False):
+    se = myTimer("createInterpolationTimer")
+    se.start()
+
+    df = loadDataframe(ffp)
+    dicts = dataframeToDicts(df)
+
+    if hexagonsOnly:
+        dstDir = dstDir + os.sep + "createInterpolationHexagonsOnly"
+    else:
+        dstDir = dstDir + os.sep + "createInterpolation"
+
+        if os.path.exists(dstDir):
+            if overwrite:
+                removeDir(dstDir)
+                time.sleep(1)
+        else:
+            os.makedirs(dstDir, exist_ok=True)
+
+    N = len(data)
+
+    sn = 3000
+    pointMap = None
+    pointMapFfp = dstDir + os.sep + "pointMap.npy"
+    if "pointMap.npy" in os.listdir(dstDir):
+        pointMap = np.load(pointMapFfp)
+    else:
+        visited1, visited2, pointMap = constructMatrix(data, k=7, sn=sn, hexagonsOnly=hexagonsOnly, debug=debug)
+        np.save(pointMapFfp, pointMap)
+    interpolate(originalData=dicts, pointMap=pointMap, dstDir=dstDir)
     se.end()
+
+
+def createHeatmapForInterpolatedPoints(srcDir, dstDir, overwrite=False):
+    dataSrc = srcDir + os.sep + "createInterpolation"
+    oldPointsPath = dataSrc + os.sep + "oldPoints.xlsx"
+    newPointsPath = dataSrc + os.sep + "newPoints.xlsx"
+
+    if os.path.exists(oldPointsPath) and os.path.exists(newPointsPath):
+        newPointsDf = pd.read_excel(oldPointsPath)
+        oldPointsDf = pd.read_excel(newPointsPath)
+
+    if os.path.exists(dstDir):
+        if overwrite:
+            removeDir(dstDir)
+            time.sleep(1)
+        else:
+            return
+    os.makedirs(dstDir, exist_ok=True)
+
+    concDf = pd.concat([oldPointsDf, newPointsDf])
+    # writeDataframeToXlsx(concDf, dstDir, "concDf.xlsx")
+    writeCsv(concDf, dstDir + os.sep + ".csv")
+
+    oldPointDis = retrieveDisplacement(oldPointsDf, normalizeData=True)
+    newPointDis = retrieveDisplacement(newPointsDf, normalizeData=True)
+
+    oldPointVoxels = retrieveVoxels(oldPointsDf)
+    newPointVoxels = retrieveVoxels(newPointsDf)
+
+    allDisplacements = np.concatenate([oldPointDis, newPointDis])
+    allVoxels = np.concatenate([oldPointVoxels, newPointVoxels])
+    colors = cm.rainbow(allDisplacements)
+
+    # createScatterPlot(allVoxels, colours=colors, title="interpolated", save=False, show=True)
+
+    pass

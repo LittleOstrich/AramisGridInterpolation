@@ -28,6 +28,8 @@ def loadDataByPath(src):
     df = None
     if ffp.endswith(".csv"):
         df = readCsv(ffp)
+    else:
+        df = readCsv(ffp + ".csv")
     return df
 
 
@@ -35,14 +37,26 @@ def loadAllDataAsArrays(src, normalizeData=True, N=100):
     dfs = loadAllDataAsDfs(src=src)
     arrs = list()
     for df in dfs:
-        arr = dataDfToArray(df, normalizeData)
+        arr = retrieveVoxels(df, normalizeData)
         arrs.append(arr)
         if len(arrs) == N:
             break
     return arrs
 
 
-def dataDfToArray(df, normalizeData=True):
+def dfToDictOfArrays(df, selectedHeaders=None):
+    keys = None
+    d = dict()
+    if selectedHeaders is None:
+        selectedHeaders = df.keys()
+
+    for sc in selectedHeaders:
+        col = df[sc].tolist()
+        d[sc] = col
+    return d
+
+
+def retrieveVoxels(df, normalizeData=True):
     x = df[dreieckRasterHeaders.x].tolist()
     y = df[dreieckRasterHeaders.y].tolist()
     z = df[dreieckRasterHeaders.z].tolist()
@@ -64,6 +78,24 @@ def dataDfToArray(df, normalizeData=True):
     data[:, 2] = z
 
     return data
+
+
+def retrieveDisplacement(df, normalizeData=True):
+    x = df[dreieckRasterHeaders.displacement_x].tolist()
+    y = df[dreieckRasterHeaders.displacement_y].tolist()
+    z = df[dreieckRasterHeaders.displacement_z].tolist()
+
+    N = len(df)
+
+    x = np.abs(np.array(x))
+    y = np.abs(np.array(y))
+    z = np.abs(np.array(z))
+
+    totalDisplacement = x + y + z
+    totalDisplacement = totalDisplacement * 10000
+    if normalizeData:
+        totalDisplacement = totalDisplacement / np.max(totalDisplacement)
+    return totalDisplacement
 
 
 def getAllPathes(sd=".", filterFuntion=None, debug=False):
