@@ -4,6 +4,9 @@ from matplotlib import cm
 
 from data.dataLoader import retrieveDisplacement, retrieveVoxels
 from helpers.converter import pointMapToMatrix, centerPointMap, centeredPointMapToMatrix, storeVisualizedPointMap
+from helpers.fileTools import cleanup
+from helpers.geometryHelper import computeTriangleArea, computeTriangleSidelengths, computeTriangleAngels
+from helpers.helperKeys import findAllTrianglesHeaders
 from helpers.numpyTools import safeIndexing, saveConcate, matrixAsImage
 from helpers.timeTools import myTimer
 
@@ -15,7 +18,7 @@ import pandas as pd
 from sklearn.cluster import KMeans
 from sklearn.metrics import silhouette_score, calinski_harabasz_score, davies_bouldin_score
 
-from backbone import computeNearestNeighboursMatrix, alignData, constructMatrix
+from backbone import computeNearestNeighboursMatrix, alignData, constructMatrix, findTriangles
 from helpers.csvTools import csv_to_xlsx, listsToCsv, loadDataframe, dataframeToDicts, writeDataframeToXlsx, writeCsv
 from helpers.general_tools import getColours, sciF, execFunctionOnMatrix, removeDir
 from helpers.seabornTools import createScatterPlot, plotHistogram, nearestNeighbourscatterPlot, scatterPlot3D, \
@@ -35,6 +38,7 @@ class metadataDsts:
     viewPointMaps = "viewPointMaps"
     createInterpolation = "createInterpolation"
     createHeatmapForInterpolatedPoints = "createHeatmapForInterpolatedPoints"
+    findAllTriangles = "findAllTriangles"
 
 
 def createScattterPlots(data, dstDir=None, show=False, save=True, dpi=500, overwrite=False):
@@ -984,3 +988,42 @@ def createHeatmapForInterpolatedPoints(srcDir, dstDir, overwrite=True):
     createScatterPlot(allVoxels, colours=colors, title="interpolated", save=False, show=True)
 
     pass
+
+
+def findAllTriangles(data, dstDir, useIntermediateResults=False, k=7, debug=False, overwrite=True):
+    dst = dstDir + os.sep + "allTriangles"
+    cleanup(dst, overwrite)
+    se = myTimer("findAllTriangles")
+    se.start()
+    triangles, errorIndices = findTriangles(data, k=k, debug=False, useIntermediateResults=useIntermediateResults)
+
+    print("triangles: ", len(triangles))
+    print("errorIndices: ", len(errorIndices))
+
+    trianglesCsv = "trianglesCsv.csv"
+    df = pd.DataFrame(columns=findAllTrianglesHeaders.allHeaders)
+
+    N = len(triangles)
+    for i in range(N):
+        tri = triangles[i]
+        x1, x2, x3 = data[tri[0]], data[tri[1]], data[tri[2]]
+        d = dict()
+        d[findAllTrianglesHeaders.index_1] = tri[0]
+        d[findAllTrianglesHeaders.index_2] = tri[1]
+        d[findAllTrianglesHeaders.index_3] = tri[2]
+        d[findAllTrianglesHeaders.area] = sciF(computeTriangleArea(x1, x2, x3))
+
+        a, b, c = computeTriangleSidelengths(x1, x2, x3)
+        d[findAllTrianglesHeaders.a] = sciF(a)
+        d[findAllTrianglesHeaders.b] = sciF(b)
+        d[findAllTrianglesHeaders.c] = sciF(c)
+
+        alpha, beta, gamma = computeTriangleAngels(x1, x2, x3)
+        d[findAllTrianglesHeaders.alpha] = sciF(alpha)
+        d[findAllTrianglesHeaders.beta] = sciF(beta)
+        d[findAllTrianglesHeaders.gamma] = sciF(gamma)
+
+        df = df.append(d, ignore_index=True)
+    writeCsv(df, dst, trianglesCsv)
+    se.end()
+    print("--------------")

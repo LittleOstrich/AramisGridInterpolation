@@ -17,7 +17,7 @@ from helpers.timeTools import myTimer
 from metadata.metadataHelper import findBestKForKMeans, countsByCluster, visualizeCounts, createProjectedDataHistograms, \
     computeCountsTest, createScattterPlots, saveDistances, randomHexagonSampling, detailedRandomHexagonSampling, \
     viewTransformedDataSurroundings, countHexagones, colourDataByShape, viewPointMaps, checkGridStructure, \
-    createInterpolation, createHeatmapForInterpolatedPoints
+    createInterpolation, createHeatmapForInterpolatedPoints, findAllTriangles
 from paths import DataDir, MetadataDir, MetadataDirExtern
 
 src = paths.DataDir.cleanSamples
@@ -70,15 +70,15 @@ for i in range(0, N):
         # viewTransformedDataSurroundings(data, dstDir=dstDir)
         # countHexagones(data, dstDir=dstDir)
         # viewPointMaps(data, dstDir, hexagonsOnly=hexagonsOnly, debug=debug, overwrite=True)
-        checkGridStructure(data, dstDir, hexagonsOnly=hexagonsOnly, debug=debug, overwrite=True)
+        # checkGridStructure(data, dstDir, hexagonsOnly=hexagonsOnly, debug=debug, overwrite=True)
 
         # createInterpolation(data, interFfp, interDstDir, hexagonsOnly=False, overwrite=False, debug=False)
         # createInterpolation(data, ffp, dstDir, overwrite=False)
 
         # createHeatmapForInterpolatedPoints(srcDir=srcDir,
         #                                    dstDir=dstDir)
+        findAllTriangles(data, dstDir, useIntermediateResults=False, k=7, debug=False, overwrite=True)
 
-        # print(d)
         print("Done with iteration: ", i)
         print("--------------")
         print()

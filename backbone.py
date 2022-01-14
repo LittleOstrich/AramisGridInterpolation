@@ -490,7 +490,7 @@ def handlePointsToTheSide(data, indices, d, side="L"):
             d["blp"] = indices[0]
             d["tlp"] = indices[1]
         elif side == "R":
-            assert d.get("tlp", None) is None
+            assert d.get("trp", None) is None
             d["brp"] = indices[0]
             d["trp"] = indices[1]
         else:
@@ -499,16 +499,16 @@ def handlePointsToTheSide(data, indices, d, side="L"):
         d["errors"] = True
 
 
-def handleCenterPoints(data, indices, d):
+def handleCenterPoints(data, nbIndices, d):
     N = len(data)
     for i in range(N):
         y = data[i][1]
         if y < 0:
-            d["bp"] = indices[i]
+            d["bp"] = nbIndices[i]
         elif y == 0:
-            d["cp"] = indices[i]
+            d["cp"] = nbIndices[i]
         elif y > 0:
-            d["tp"] = indices[i]
+            d["tp"] = nbIndices[i]
 
     if d.get("bp", None) is None \
             or d.get("cp", None) is None \
@@ -517,13 +517,24 @@ def handleCenterPoints(data, indices, d):
 
 
 def triangleCombinations(d):
-    combinations = [[d["tlp"], d["blp"], d["cp"]],
-                    [d["trp"], d["brp"], d["cp"]],
-                    [d["tp"], d["cp"], d["trp"]],
-                    [d["tp"], d["cp"], d["tlp"]],
-                    [d["bp"], d["cp"], d["brp"]],
-                    [d["bp"], d["cp"], d["blp"]]]
+    combinations = list()
+    combinationsTemp = [[d["tlp"], d["blp"], d["cp"]],
+                        [d["trp"], d["brp"], d["cp"]],
+                        [d["tp"], d["cp"], d["trp"]],
+                        [d["tp"], d["cp"], d["tlp"]],
+                        [d["bp"], d["cp"], d["brp"]],
+                        [d["bp"], d["cp"], d["blp"]]]
+    for comb in combinationsTemp:
+        comb = np.array(comb)
+        comb.sort()
+        combinations.append(np.array(comb))
     return combinations
+
+
+def removeDuplicateTriangles(triangles):
+    triangles = set(map(tuple, triangles))
+    triangles = np.array(list(set(triangles)), dtype=int)
+    return triangles
 
 
 def findTriangles(data, k=7, debug=False, useIntermediateResults=False):
@@ -536,18 +547,20 @@ def findTriangles(data, k=7, debug=False, useIntermediateResults=False):
         nbIndices = indices[i]
         alignedData = alignData(data[nbIndices])
 
-        flps, lps, cps, rps, frps = determinePosition(alignedData, nbIndices)
-
+        # flps, lps, cps, rps, frps = determinePosition(alignedData, nbIndices)
+        flps, lps, cps, rps, frps = determinePosition(alignedData, np.arange(k))
         if len(lps) == 2 and len(cps) == 3 and len(rps) == 2:
             # we have a hexagon structure
             d = dict()
-            handlePointsToTheSide(data[lps], lps, d, side="L")
-            handlePointsToTheSide(data[rps], rps, d, side="R")
-            handleCenterPoints(data[cps], cps, d)
+            handlePointsToTheSide(alignedData[lps], nbIndices[lps], d, side="L")
+            handlePointsToTheSide(alignedData[rps], nbIndices[rps], d, side="R")
+            handleCenterPoints(alignedData[cps], nbIndices[cps], d)
 
             if d.get("errors") is None:
                 triCombs = triangleCombinations(d)
                 triangles = triangles + triCombs
             else:
                 errorIndices.append(i)
+
+    triangles = removeDuplicateTriangles(triangles)
     return triangles, errorIndices
