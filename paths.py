@@ -13,7 +13,7 @@ class projectDirs:
 class rawDataFiles:
     dreieckRaster = projectBase + os.sep + projectDirs.data + os.sep + "dreieck_raster.csv"
     viereckRaster = projectBase + os.sep + projectDirs.data + os.sep + "viereck_raster_temp.asc"
-    cleanedViereckRaster = projectBase + os.sep + projectDirs.data + os.sep + "cleanedAsc.csv"
+    cleanedAscii = projectBase + os.sep + projectDirs.data + os.sep + "cleanedAsc.csv"
 
 
 class AramisGrindInterpolationDir:

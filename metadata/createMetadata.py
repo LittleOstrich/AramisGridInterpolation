@@ -20,8 +20,8 @@ from metadata.metadataHelper import findBestKForKMeans, countsByCluster, visuali
     createInterpolation, createHeatmapForInterpolatedPoints
 from paths import DataDir, MetadataDir, MetadataDirExtern
 
-src = DataDir.interpolatedData
-dstDir = MetadataDir.sampleAnalysis
+src = paths.DataDir.cleanSamples
+dst = MetadataDir.sampleAnalysis
 # src = DataDir.cleanLFT1086
 # dstDir = MetadataDirExtern.base
 
@@ -49,29 +49,28 @@ for i in range(0, N):
     se.start()
     try:
         print("Starting iteration: ", i)
-        ffp = src + os.sep + files[i]
 
+        dstDir = dst + os.sep + files[i][:-4]
+
+        ffp = src + os.sep + files[i]
         data = loadDataByPath(ffp)
         data = retrieveVoxels(data, normalizeData=False)
 
-        srcDir = paths.DataDir.cleanSamples + os.sep + files[i][:-4]
-        dstDir = paths.MetadataDir.sampleAnalysis + os.sep + files[i][:-4]
-
         hexagonsOnly = False
 
-        findBestKForKMeans(data, dstDir=dstDir, show=False, save=True, overwrite=False)
-        computeCountsTest(data, dstDir=dstDir, show=False, save=True, overwrite=False)
-        visualizeCounts(data, dstDir=dstDir, show=False, save=True, overwrite=False)
-        countsByCluster(data, dstDir=dstDir, show=False, save=True, overwrite=False)
-        createScattterPlots(data, dstDir=dstDir, show=False, save=True, overwrite=False)
-        createProjectedDataHistograms(data, dstDir=dstDir, show=False, save=True, overwrite=False)
+        # findBestKForKMeans(data, dstDir=dstDir, show=False, save=True, overwrite=False)
+        # computeCountsTest(data, dstDir=dstDir, show=False, save=True, overwrite=False)
+        # visualizeCounts(data, dstDir=dstDir, show=False, save=True, overwrite=False)
+        # countsByCluster(data, dstDir=dstDir, show=False, save=True, overwrite=False)
+        # createScattterPlots(data, dstDir=dstDir, show=False, save=True, overwrite=False)
+        # createProjectedDataHistograms(data, dstDir=dstDir, show=False, save=True, overwrite=False)
 
-        saveDistances(data, dstDir, save=True)
+        # saveDistances(data, dstDir, save=True)
 
-        viewTransformedDataSurroundings(data, dstDir=dstDir)
-        countHexagones(data, dstDir=dstDir)
-        viewPointMaps(data, dstDir, hexagonsOnly, debug, overwrite=False)
-        checkGridStructure(data, dstDir, hexagonsOnly, debug, overwrite=False)
+        # viewTransformedDataSurroundings(data, dstDir=dstDir)
+        # countHexagones(data, dstDir=dstDir)
+        # viewPointMaps(data, dstDir, hexagonsOnly=hexagonsOnly, debug=debug, overwrite=True)
+        checkGridStructure(data, dstDir, hexagonsOnly=hexagonsOnly, debug=debug, overwrite=True)
 
         # createInterpolation(data, interFfp, interDstDir, hexagonsOnly=False, overwrite=False, debug=False)
         # createInterpolation(data, ffp, dstDir, overwrite=False)

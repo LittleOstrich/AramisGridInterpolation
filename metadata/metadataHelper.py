@@ -57,6 +57,7 @@ def createScattterPlots(data, dstDir=None, show=False, save=True, dpi=500, overw
     createScatterPlot(data, title=dd3d, dst=dstDir, save=save, show=show, dpi=dpi)
     # createScatterPlot(viereckData[:, :2], title=vd2d, save=save, show=show, dpi=dpi)
     # createScatterPlot(viereckData, title=vd3d, save=save, show=show, dpi=dpi)
+    print("Done with creating scatterplots")
 
 
 def createAxisProjections(data, dstDir=None, show=False, save=True, dpi=500):
@@ -490,6 +491,8 @@ def detailedRandomHexagonSampling(data, dstDir, numSamples=100, withCenter=True)
 
 
 def viewTransformedDataSurroundings(data, dstDir, nnn=6, overwrite=False):
+    se = myTimer("viewTransformedDataSurroundings")
+    se.start()
     N = len(data)
     dstDir = dstDir + os.sep + "viewLocalShape"
     if os.path.exists(dstDir):
@@ -511,6 +514,7 @@ def viewTransformedDataSurroundings(data, dstDir, nnn=6, overwrite=False):
         createScatterPlot(data=newData, title=title, dst=dstDir,
                           save=True, show=False, dpi=500, colours=None,
                           labels=None, alpha=1.0)
+    se.end()
 
 
 def isParallelogram(l, c, r):
@@ -708,7 +712,8 @@ def createPointMaps(data, dstDir, hexagonsOnly=False, overwrite=False, debug=Fal
     for i in [1100, 0, 3000, 1556]:
         print("Starting with: ", str(i))
         se.start()
-        visited1, visited2, pointMap = constructMatrix(data, k=7, sn=i, hexagonsOnly=hexagonsOnly, debug=debug)
+        visited1, visited2, pointMap = constructMatrix(data, k=7, sn=i, iterationsMax=50000, hexagonsOnly=hexagonsOnly,
+                                                       debug=debug)
         se.end()
 
         visitedEvenpath = dstDir + os.sep + "visitedEven" + "_" + str(i)
@@ -742,7 +747,8 @@ def viewPointMaps(data, dstDir, hexagonsOnly=False, overwrite=False, debug=False
     for i in [1100, 0, 3000, 1556]:
         print("Starting with: ", str(i))
         se.start()
-        visited1, visited2, pointMap = constructMatrix(data, k=7, sn=i, hexagonsOnly=hexagonsOnly, debug=debug)
+        visited1, visited2, pointMap = constructMatrix(data, k=7, sn=i, iterationsMax=50000, hexagonsOnly=hexagonsOnly,
+                                                       debug=debug)
         se.end()
 
         evenIndexed = np.array(list(visited1)).astype(int)
@@ -897,17 +903,18 @@ def checkGridStructure(data, dstDir, hexagonsOnly=False, overwrite=False, debug=
     percentiles = [100]
     for i in startingPoints:
         print("Starting with: ", str(i))
-        visited1, visited2, pointMap = constructMatrix(data, k=7, sn=i, hexagonsOnly=hexagonsOnly, debug=debug)
+        visited1, visited2, pointMap = constructMatrix(data, k=7, sn=i, iterationsMax=50000, hexagonsOnly=hexagonsOnly,
+                                                       debug=debug)
 
         for p in percentiles:
-            fn = fnTemplate.format(i, p)
+            fn = fnTemplate.format(20, i, p)
             storeVisualizedPointMap(pointMap, p, tS=20, save=True, show=False, dstDir=dstDir, fn=fn)
 
-            np.save(visitedPathTemplate.format("visited1", str(i), str(p), visited1))
-            np.save(visitedPathTemplate.format("visited2", str(i), str(p), visited2))
-            np.save(visitedPathTemplate.format("pointMap", str(i), str(p), pointMap))
+            np.save(visitedPathTemplate.format("visited1", str(i), str(p)), visited1)
+            np.save(visitedPathTemplate.format("visited2", str(i), str(p)), visited1)
+            np.save(visitedPathTemplate.format("pointMap", str(i), str(p)), pointMap)
 
-            se.end()
+    se.end()
 
 
 def createInterpolation(data, ffp, dstDir, hexagonsOnly=False, overwrite=False, debug=False):

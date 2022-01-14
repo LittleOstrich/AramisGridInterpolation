@@ -59,14 +59,14 @@ class myTimer:
         self.starts.append(s)
         self.on = True
 
-    def end(self):
+    def end(self, showReport=True):
         assert self.on == True
         e = time.time()
         self.ends.append(e)
         self.on = False
-
-        if self.counter % self.reportFrequency == 0:
-            self.report()
+        if showReport:
+            if self.counter % self.reportFrequency == 0:
+                self.report()
 
     def report(self, write=False):
         starts = np.array(self.starts)

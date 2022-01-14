@@ -267,7 +267,7 @@ def startNumber(sn, N):
     return sn
 
 
-def constructMatrix(data, k=7, sn=None, hexagonsOnly=False, debug=False):
+def constructMatrix(data, k=7, sn=None, iterationsMax=50000, hexagonsOnly=False, debug=False):
     se = None
     if debug:
         se = myTimer("constructMatrixTimer")
@@ -295,9 +295,9 @@ def constructMatrix(data, k=7, sn=None, hexagonsOnly=False, debug=False):
     '''
 
     # Crude way to avoid an endless loop
-    iterationsMax = 30000  # sensible value is necessary, value has to big enough?
+    iterationsMax = iterationsMax  # sensible value is necessary, value has to big enough?
     iterationsCur = 0
-    debugStepSize = 10
+    debugStepSize = 1000
     switch = 0
 
     ''''
@@ -416,7 +416,8 @@ def constructMatrix(data, k=7, sn=None, hexagonsOnly=False, debug=False):
             pointMap[frps[rNb], 1] = curIndY
             curS.add(frps[rNb])
 
-        # set center points above
+        # order the points directly above/below the center point
+        # creating a (index, distance) pair of arrays
         M = len(cps)
         if M > 0:
             abovePoints = np.zeros((M, 2))
@@ -435,7 +436,7 @@ def constructMatrix(data, k=7, sn=None, hexagonsOnly=False, debug=False):
                     belowPoints[numAbove, 0] = cp
                     numBelow = numBelow + 1
                 else:
-                    assert False
+                    continue
                 curS.add(cp)
 
             abovePoints = abovePoints[:numAbove, :]
@@ -455,7 +456,7 @@ def constructMatrix(data, k=7, sn=None, hexagonsOnly=False, debug=False):
 
         if debug:
             if iterationsCur % debugStepSize == 0:
-                se.end()
+                se.end(showReport=False)
                 print("iterationsCur: ", iterationsCur)
         iterationsCur = iterationsCur + 1
 
@@ -550,13 +551,3 @@ def findTriangles(data, k=7, debug=False, useIntermediateResults=False):
             else:
                 errorIndices.append(i)
     return triangles, errorIndices
-
-
-def test():
-    src = DataDir.cleanSamples
-    datas = loadAllDataAsArrays(src=src, normalizeData=False)
-    data = datas[0]
-
-    constructMatrix(data)
-
-# test()
