@@ -47,7 +47,7 @@ class DataDir:
     subDirs = [cleanSamples, rawSamples, samplesOld, rawLFT1086, interpolatedData, cleanLFT1086]
 
 
-class metadataDir:
+class MetadataDir:
     dirname = "metadata"
     parentDir = AramisGrindInterpolationDir.base
     base = AramisGrindInterpolationDir.base + os.sep + dirname
@@ -57,7 +57,7 @@ class metadataDir:
     subdirs = [sampleAnalysis, interpolatedDataAnalysis]
 
 
-class metadataDirExtern:
+class MetadataDirExtern:
     dirname = "metadata"
     parentDir = projectBaseExtern
     base = projectBaseExtern + os.sep + dirname

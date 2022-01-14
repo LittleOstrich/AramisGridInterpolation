@@ -91,8 +91,8 @@ def retrieveDisplacement(df, normalizeData=True):
     y = np.abs(np.array(y))
     z = np.abs(np.array(z))
 
-    totalDisplacement = x + y + z
-    totalDisplacement = totalDisplacement * 10000
+    totalDisplacement = x + y + z  # does l2 norm make a big difference(?)
+    totalDisplacement = totalDisplacement
     if normalizeData:
         totalDisplacement = totalDisplacement / np.max(totalDisplacement)
     return totalDisplacement

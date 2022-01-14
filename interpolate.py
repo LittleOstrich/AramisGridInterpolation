@@ -1,5 +1,6 @@
 import numpy as np
 import pandas as pd
+from matplotlib import pyplot as plt
 
 from helpers.csvTools import writeDataframeToXlsx, appendDictsToDf
 
@@ -71,19 +72,3 @@ def interpolate(originalData, pointMap, dstDir, mode=interpolationModes.default)
     newPointsDf = appendDictsToDf(newPoints, newPointsDf)
     writeDataframeToXlsx(oldPointsDf, dstDir, "oldPoints.xlsx")
     writeDataframeToXlsx(newPointsDf, dstDir, "newPoints.xlsx")
-
-    plt.figure(1, figsize=(9, 4))
-
-    # Specify a RGB color from float 3-tuple
-    plt.subplot(1, 2, 1)
-    plt.plot(x1, y1, '*', c=np.random.rand(3))
-    plt.ylabel('RGB color from float 3-tuple')
-
-    # Specify a color from a colormap from a single float
-    plt.subplot(1, 2, 2)
-    plt.plot(x1, y1, '*', c=plt.cm.viridis(np.random.rand()))
-    plt.plot(x2, y2, 'o', c=plt.cm.viridis(np.random.rand()))
-    plt.ylabel('Color from colormap from single float')
-
-    plt.tight_layout()
-    plt.show()

@@ -1,7 +1,7 @@
 import os
 
 from data.dataLoader import getAllPathes, dfToDictOfArrays, loadAllDataAsArrays, loadDataByPath
-from paths import DataDir, metadataDir
+from paths import DataDir, MetadataDir
 
 
 def findDataSnippet(sd, ff, debug=False):

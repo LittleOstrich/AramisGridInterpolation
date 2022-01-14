@@ -223,7 +223,7 @@ def terminateLoop():
     return True
 
 
-def determinePosition(alignedData, curIndices, curV):
+def determinePosition(alignedData, curIndices):
     flps = list()  # far left points
     lps = list()  # left points
     cps = list()  # center points
@@ -233,26 +233,24 @@ def determinePosition(alignedData, curIndices, curV):
     M = len(curIndices)
     for j in range(M):
         nbInd = curIndices[j]
-        if nbInd in curV:
-            continue
-        else:
-            lx = alignedData[j][0]
 
-            # determine affiliation
-            if isFarleft(lx):
-                flps.append(nbInd)
-            elif isLeft(lx):
-                lps.append(nbInd)
-            elif isCenter(lx):
-                cps.append(nbInd)
-            elif isRight(lx):
-                rps.append(nbInd)
-            elif isFarright(lx):
-                frps.append(nbInd)
-            else:
-                print(curIndices)
-                print(alignedData)
-                assert False
+        lx = alignedData[j][0]
+
+        # determine affiliation
+        if isFarleft(lx):
+            flps.append(nbInd)
+        elif isLeft(lx):
+            lps.append(nbInd)
+        elif isCenter(lx):
+            cps.append(nbInd)
+        elif isRight(lx):
+            rps.append(nbInd)
+        elif isFarright(lx):
+            frps.append(nbInd)
+        else:
+            print(curIndices)
+            print(alignedData)
+            assert False
 
     flps = np.array(flps)  # far left points
     lps = np.array(lps)  # left points
@@ -330,7 +328,7 @@ def constructMatrix(data, k=7, sn=None, hexagonsOnly=False, debug=False):
         curIndices = indices[curInd]
         alignedData = alignData(data[curIndices])
 
-        flps, lps, cps, rps, frps = determinePosition(alignedData, curIndices, curV)
+        flps, lps, cps, rps, frps = determinePosition(alignedData, curIndices)
 
         if hexagonsOnly:
             assert k == 7
@@ -468,6 +466,90 @@ def constructMatrix(data, k=7, sn=None, hexagonsOnly=False, debug=False):
 
     print("Done with constructMatrix")
     return visited1, visited2, pointMap
+
+
+def handlePointsToTheSide(data, indices, d, side="L"):
+    spy1 = data[0][1]
+    spy2 = data[1][1]
+
+    if spy1 > 0 and spy2 < 0:
+        if side == "L":
+            assert d.get("tlp", None) is None
+            d["blp"] = indices[0]
+            d["tlp"] = indices[1]
+        elif side == "R":
+            assert d.get("trp", None) is None
+            d["brp"] = indices[0]
+            d["trp"] = indices[1]
+        else:
+            assert False
+    elif spy1 < 0 and spy2 > 0:
+        if side == "L":
+            assert d.get("tlp", None) is None
+            d["blp"] = indices[0]
+            d["tlp"] = indices[1]
+        elif side == "R":
+            assert d.get("tlp", None) is None
+            d["brp"] = indices[0]
+            d["trp"] = indices[1]
+        else:
+            assert False
+    else:
+        d["errors"] = True
+
+
+def handleCenterPoints(data, indices, d):
+    N = len(data)
+    for i in range(N):
+        y = data[i][1]
+        if y < 0:
+            d["bp"] = indices[i]
+        elif y == 0:
+            d["cp"] = indices[i]
+        elif y > 0:
+            d["tp"] = indices[i]
+
+    if d.get("bp", None) is None \
+            or d.get("cp", None) is None \
+            or d.get("bp", None) is None:
+        d["errors"] = True
+
+
+def triangleCombinations(d):
+    combinations = [[d["tlp"], d["blp"], d["cp"]],
+                    [d["trp"], d["brp"], d["cp"]],
+                    [d["tp"], d["cp"], d["trp"]],
+                    [d["tp"], d["cp"], d["tlp"]],
+                    [d["bp"], d["cp"], d["brp"]],
+                    [d["bp"], d["cp"], d["blp"]]]
+    return combinations
+
+
+def findTriangles(data, k=7, debug=False, useIntermediateResults=False):
+    dists, indices = computeNearestNeighboursMatrix(data, k=k)
+
+    N = len(data)
+    triangles = list()
+    errorIndices = list()
+    for i in range(N):
+        nbIndices = indices[i]
+        alignedData = alignData(data[nbIndices])
+
+        flps, lps, cps, rps, frps = determinePosition(alignedData, nbIndices)
+
+        if len(lps) == 2 and len(cps) == 3 and len(rps) == 2:
+            # we have a hexagon structure
+            d = dict()
+            handlePointsToTheSide(data[lps], lps, d, side="L")
+            handlePointsToTheSide(data[rps], rps, d, side="R")
+            handleCenterPoints(data[cps], cps, d)
+
+            if d.get("errors") is None:
+                triCombs = triangleCombinations(d)
+                triangles = triangles + triCombs
+            else:
+                errorIndices.append(i)
+    return triangles, errorIndices
 
 
 def test():

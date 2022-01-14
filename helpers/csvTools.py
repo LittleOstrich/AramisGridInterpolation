@@ -29,6 +29,16 @@ def listsGet(lists, j, i):
         return str(-1)
 
 
+def duplicatesHandler(df=pd.DataFrame, duplicatesAllowed=False, removeDuplicates=False):
+    dups = df.duplicated()
+    if not duplicatesAllowed:
+        if True in dups:
+            assert False
+    if removeDuplicates:
+        df = df.drop_duplicates()
+    return df
+
+
 def listsToCsv(lists, dst="temp" + os.sep + "defaultName.csv", withDate=False, delim=";", debug=False,
                deleteIfExists=False):
     numKeys = len(lists)

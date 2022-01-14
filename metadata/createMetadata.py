@@ -6,6 +6,7 @@ import warnings
 import logging
 
 import paths
+from interpolate import interpolate
 
 logging.getLogger().setLevel(logging.CRITICAL)
 
@@ -17,12 +18,14 @@ from metadata.metadataHelper import findBestKForKMeans, countsByCluster, visuali
     computeCountsTest, createScattterPlots, saveDistances, randomHexagonSampling, detailedRandomHexagonSampling, \
     viewTransformedDataSurroundings, countHexagones, colourDataByShape, viewPointMaps, checkGridStructure, \
     createInterpolation, createHeatmapForInterpolatedPoints
-from paths import DataDir, metadataDir, metadataDirExtern
+from paths import DataDir, MetadataDir, MetadataDirExtern
 
 src = DataDir.interpolatedData
-dstDir = metadataDir.sampleAnalysis
+dstDir = MetadataDir.sampleAnalysis
 # src = DataDir.cleanLFT1086
-# dstDir = metadataDirExtern.base
+# dstDir = MetadataDirExtern.base
+
+interFfp = DataDir.cleanSamples + os.sep + "dreieck_raster2.csv"
 
 show = False
 save = True
@@ -41,41 +44,41 @@ N = len(files)
 se = myTimer("createMetadata", ".")
 overwrite = False
 # 85
+# interDstDir = MetadataDir.interpolatedDataAnalysis
 for i in range(0, N):
     se.start()
     try:
         print("Starting iteration: ", i)
         ffp = src + os.sep + files[i]
+
         data = loadDataByPath(ffp)
         data = retrieveVoxels(data, normalizeData=False)
 
-        d["data"] = np.copy(data)
+        srcDir = paths.DataDir.cleanSamples + os.sep + files[i][:-4]
+        dstDir = paths.MetadataDir.sampleAnalysis + os.sep + files[i][:-4]
 
-        srcDir = paths.DataDir.interpolatedData + os.sep + files[i][:-4]
-        dstDir = paths.metadataDir.interpolatedDataAnalysis + os.sep + files[i][:-4]
+        hexagonsOnly = False
 
-        d["hexagonsOnly"] = False
-        d["debug"] = False
-        d["overwrite"] = overwrite
-        d["ffp"] = ffp
-
-        # createInterpolation(data, ffp, dstDir, overwrite=False)
-        findBestKForKMeans(data, dstDir=dstDir, show=False, save=True)
-        computeCountsTest(data, dstDir=dstDir, show=False, save=True)
-        visualizeCounts(data, dstDir=dstDir, show=False, save=True)
-        countsByCluster(data, dstDir=dstDir, show=False, save=True)
-        createScattterPlots(data, dstDir=dstDir, show=False, save=True)
-        createProjectedDataHistograms(data, dstDir=dstDir, show=False, save=True)
+        findBestKForKMeans(data, dstDir=dstDir, show=False, save=True, overwrite=False)
+        computeCountsTest(data, dstDir=dstDir, show=False, save=True, overwrite=False)
+        visualizeCounts(data, dstDir=dstDir, show=False, save=True, overwrite=False)
+        countsByCluster(data, dstDir=dstDir, show=False, save=True, overwrite=False)
+        createScattterPlots(data, dstDir=dstDir, show=False, save=True, overwrite=False)
+        createProjectedDataHistograms(data, dstDir=dstDir, show=False, save=True, overwrite=False)
 
         saveDistances(data, dstDir, save=True)
 
-        # detailedRandomHexagonSampling(data, dstDir=dstDir, show=False, save=False, numSamples=numSamples)
         viewTransformedDataSurroundings(data, dstDir=dstDir)
         countHexagones(data, dstDir=dstDir)
-        viewPointMaps(data, dstDir, d["hexagonsOnly"], d["debug"], d["overwrite"])
-        checkGridStructure(data, dstDir, d["hexagonsOnly"], d["debug"], d["overwrite"])
-        createHeatmapForInterpolatedPoints(srcDir=srcDir,
-                                           dstDir=d["dstDir"])
+        viewPointMaps(data, dstDir, hexagonsOnly, debug, overwrite=False)
+        checkGridStructure(data, dstDir, hexagonsOnly, debug, overwrite=False)
+
+        # createInterpolation(data, interFfp, interDstDir, hexagonsOnly=False, overwrite=False, debug=False)
+        # createInterpolation(data, ffp, dstDir, overwrite=False)
+
+        # createHeatmapForInterpolatedPoints(srcDir=srcDir,
+        #                                    dstDir=dstDir)
+
         # print(d)
         print("Done with iteration: ", i)
         print("--------------")

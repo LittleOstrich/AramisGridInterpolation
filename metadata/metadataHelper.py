@@ -301,7 +301,7 @@ def elbowMethod(data, dstDir=None, show=False, save=True):
     print("Done with: ", "elbowMethod")
 
 
-def createProjectedDataHistograms(data, dstDir=None, show=False, save=True, dpi=500):
+def createProjectedDataHistograms(data, dstDir=None, show=False, save=True, dpi=500, overwrite=False):
     X = np.copy(data[:, 0])
     dstDir = dstDir + os.sep + "projectedDataHistograms"
     for i in range(2, 40):
@@ -313,7 +313,7 @@ def createProjectedDataHistograms(data, dstDir=None, show=False, save=True, dpi=
     print("Done with: ", "createHistograms")
 
 
-def visualizeCounts(data, dstDir=None, show=False, save=False):
+def visualizeCounts(data, dstDir=None, show=False, save=False, overwrite=False):
     ##### part1
     X = np.copy(data)
     (dists, indices) = computeNearestNeighboursMatrix(X)
@@ -943,7 +943,7 @@ def createInterpolation(data, ffp, dstDir, hexagonsOnly=False, overwrite=False, 
     se.end()
 
 
-def createHeatmapForInterpolatedPoints(srcDir, dstDir, overwrite=False):
+def createHeatmapForInterpolatedPoints(srcDir, dstDir, overwrite=True):
     dataSrc = srcDir + os.sep + "createInterpolation"
     oldPointsPath = dataSrc + os.sep + "oldPoints.xlsx"
     newPointsPath = dataSrc + os.sep + "newPoints.xlsx"
@@ -952,17 +952,17 @@ def createHeatmapForInterpolatedPoints(srcDir, dstDir, overwrite=False):
         newPointsDf = pd.read_excel(oldPointsPath)
         oldPointsDf = pd.read_excel(newPointsPath)
 
-    if os.path.exists(dstDir):
-        if overwrite:
-            removeDir(dstDir)
-            time.sleep(1)
-        else:
-            return
-    os.makedirs(dstDir, exist_ok=True)
+    # if os.path.exists(dstDir):
+    #     if overwrite:
+    #         removeDir(dstDir)
+    #         time.sleep(1)
+    #     else:
+    #         return
+    # os.makedirs(dstDir, exist_ok=True)
 
     concDf = pd.concat([oldPointsDf, newPointsDf])
     # writeDataframeToXlsx(concDf, dstDir, "concDf.xlsx")
-    writeCsv(concDf, dstDir + os.sep + ".csv")
+    # writeCsv(concDf, dstDir + os.sep + ".csv")
 
     oldPointDis = retrieveDisplacement(oldPointsDf, normalizeData=True)
     newPointDis = retrieveDisplacement(newPointsDf, normalizeData=True)
@@ -974,6 +974,6 @@ def createHeatmapForInterpolatedPoints(srcDir, dstDir, overwrite=False):
     allVoxels = np.concatenate([oldPointVoxels, newPointVoxels])
     colors = cm.rainbow(allDisplacements)
 
-    # createScatterPlot(allVoxels, colours=colors, title="interpolated", save=False, show=True)
+    createScatterPlot(allVoxels, colours=colors, title="interpolated", save=False, show=True)
 
     pass
