@@ -2,7 +2,7 @@ import time
 
 from matplotlib import cm
 
-from data.dataLoader import retrieveDisplacement, retrieveVoxels
+from data.dataLoader import retrieveTotalDisplacement, retrieveVoxels, retrieveDisplacements
 from helpers.converter import pointMapToMatrix, centerPointMap, centeredPointMapToMatrix, storeVisualizedPointMap
 from helpers.fileTools import cleanup
 from helpers.geometryHelper import computeTriangleArea, computeTriangleSidelengths, computeTriangleAngels
@@ -18,7 +18,7 @@ import pandas as pd
 from sklearn.cluster import KMeans
 from sklearn.metrics import silhouette_score, calinski_harabasz_score, davies_bouldin_score
 
-from backbone import computeNearestNeighboursMatrix, alignData, constructMatrix, findTriangles
+from backbone import computeNearestNeighboursMatrix, alignData, constructMatrix, findTriangles, interpolateViaTriangles
 from helpers.csvTools import csv_to_xlsx, listsToCsv, loadDataframe, dataframeToDicts, writeDataframeToXlsx, writeCsv
 from helpers.general_tools import getColours, sciF, execFunctionOnMatrix, removeDir
 from helpers.seabornTools import createScatterPlot, plotHistogram, nearestNeighbourscatterPlot, scatterPlot3D, \
@@ -39,6 +39,7 @@ class metadataDsts:
     createInterpolation = "createInterpolation"
     createHeatmapForInterpolatedPoints = "createHeatmapForInterpolatedPoints"
     findAllTriangles = "findAllTriangles"
+    interpolateViaTrianglesMetadata = "interpolateViaTrianglesMetadata"
 
 
 def createScattterPlots(data, dstDir=None, show=False, save=True, dpi=500, overwrite=False):
@@ -975,8 +976,8 @@ def createHeatmapForInterpolatedPoints(srcDir, dstDir, overwrite=True):
     # writeDataframeToXlsx(concDf, dstDir, "concDf.xlsx")
     # writeCsv(concDf, dstDir + os.sep + ".csv")
 
-    oldPointDis = retrieveDisplacement(oldPointsDf, normalizeData=True)
-    newPointDis = retrieveDisplacement(newPointsDf, normalizeData=True)
+    oldPointDis = retrieveTotalDisplacement(oldPointsDf, normalizeData=True)
+    newPointDis = retrieveTotalDisplacement(newPointsDf, normalizeData=True)
 
     oldPointVoxels = retrieveVoxels(oldPointsDf)
     newPointVoxels = retrieveVoxels(newPointsDf)
@@ -1027,3 +1028,15 @@ def findAllTriangles(data, dstDir, useIntermediateResults=False, k=7, debug=Fals
     writeCsv(df, dst, trianglesCsv)
     se.end()
     print("--------------")
+
+
+def interpolateViaTrianglesMetadata(src, dst, k=7, debug=False, useIntermediateResults=False, overwrite=False):
+    dstDir = dst + os.sep + "interpolateViaTriangles"
+    cleanup(dstDir, overwrite)
+    df = loadDataframe(src)
+    voxelData = retrieveVoxels(df, normalizeData=False)  # normalization seems to break everything...
+    displacementData = retrieveDisplacements(df)
+    df = interpolateViaTriangles(voxelData, displacementData, k=k, debug=debug,
+                                 useIntermediateResults=useIntermediateResults)
+    writeCsv(df, dst=dstDir, fn="interpolatedData.csv")
+    print("Finally done!!!")

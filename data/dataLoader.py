@@ -80,7 +80,7 @@ def retrieveVoxels(df, normalizeData=True):
     return data
 
 
-def retrieveDisplacement(df, normalizeData=True):
+def retrieveTotalDisplacement(df, normalizeData=True):
     x = df[dreieckRasterHeaders.displacement_x].tolist()
     y = df[dreieckRasterHeaders.displacement_y].tolist()
     z = df[dreieckRasterHeaders.displacement_z].tolist()
@@ -90,12 +90,23 @@ def retrieveDisplacement(df, normalizeData=True):
     x = np.abs(np.array(x))
     y = np.abs(np.array(y))
     z = np.abs(np.array(z))
-
-    totalDisplacement = x + y + z  # does l2 norm make a big difference(?)
-    totalDisplacement = totalDisplacement
+    disp = np.concatenate([x, y, z], axis=1)
+    totalDisplacement = np.linalg.norm(disp, axis=1, ord=2)  # x + y + z  # does l2 norm make a big difference(?)
     if normalizeData:
         totalDisplacement = totalDisplacement / np.max(totalDisplacement)
     return totalDisplacement
+
+
+def retrieveDisplacements(df):
+    x = df[dreieckRasterHeaders.displacement_x].tolist()
+    y = df[dreieckRasterHeaders.displacement_y].tolist()
+    z = df[dreieckRasterHeaders.displacement_z].tolist()
+
+    x = np.array(x)[:, np.newaxis]
+    y = np.array(y)[:, np.newaxis]
+    z = np.array(z)[:, np.newaxis]
+    displacements = np.concatenate([x, y, z], axis=1)
+    return displacements
 
 
 def getAllPathes(sd=".", filterFuntion=None, debug=False):

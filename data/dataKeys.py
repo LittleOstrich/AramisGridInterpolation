@@ -28,3 +28,15 @@ class viereckRasterHeaders:
     z_Koordinate = "z-Koordinate"
 
     allHeaders = [index_x, index_y, x_Koordinate, y_Koordinate, z_Koordinate]
+
+
+class interpolatedDataHeaders:
+    x = "x"
+    y = "y"
+    z = "z"
+    xDisplacement = "xDisplacement"
+    yDisplacement = "yDisplacement"
+    zDisplacement = "zDisplacement"
+    totalDisplacement = "totalDisplacement"
+
+    allHeaders = [x, y, z, xDisplacement, yDisplacement, zDisplacement, totalDisplacement]

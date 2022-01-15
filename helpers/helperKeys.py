@@ -18,3 +18,9 @@ class findAllTrianglesHeaders:
     area = "area"
 
     allHeaders = [index_1, index_2, index_3, a, b, c, alpha, beta, gamma, area]
+
+
+class newInterpolatedPoints:
+    x = "x"
+    y = "y"
+    z = "z"

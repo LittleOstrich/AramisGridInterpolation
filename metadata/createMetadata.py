@@ -17,7 +17,7 @@ from helpers.timeTools import myTimer
 from metadata.metadataHelper import findBestKForKMeans, countsByCluster, visualizeCounts, createProjectedDataHistograms, \
     computeCountsTest, createScattterPlots, saveDistances, randomHexagonSampling, detailedRandomHexagonSampling, \
     viewTransformedDataSurroundings, countHexagones, colourDataByShape, viewPointMaps, checkGridStructure, \
-    createInterpolation, createHeatmapForInterpolatedPoints, findAllTriangles
+    createInterpolation, createHeatmapForInterpolatedPoints, findAllTriangles, interpolateViaTrianglesMetadata
 from paths import DataDir, MetadataDir, MetadataDirExtern
 
 src = paths.DataDir.cleanSamples
@@ -50,6 +50,7 @@ for i in range(0, N):
     try:
         print("Starting iteration: ", i)
 
+        fn = files[i]
         dstDir = dst + os.sep + files[i][:-4]
 
         ffp = src + os.sep + files[i]
@@ -77,8 +78,9 @@ for i in range(0, N):
 
         # createHeatmapForInterpolatedPoints(srcDir=srcDir,
         #                                    dstDir=dstDir)
-        findAllTriangles(data, dstDir, useIntermediateResults=False, k=7, debug=False, overwrite=True)
-
+        # findAllTriangles(data, dstDir, useIntermediateResults=False, k=7, debug=False, overwrite=True)
+        interpolateViaTrianglesMetadata(src=ffp, dst=dstDir, k=7, debug=False, useIntermediateResults=False,
+                                        overwrite=True)
         print("Done with iteration: ", i)
         print("--------------")
         print()

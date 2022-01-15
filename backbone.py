@@ -1,5 +1,6 @@
 from typing import List
 
+import pandas as pd
 from sklearn.decomposition import PCA
 from sklearn.neighbors import KDTree
 import numpy as np
@@ -9,8 +10,10 @@ from skspatial.objects import Plane
 from skspatial.objects import Points
 from skspatial.plotting import plot_3d
 
+from data.dataKeys import interpolatedDataHeaders
 from data.dataLoader import loadAllDataAsArrays
 from datapoints import pointsAsArray, datapoint
+from helpers.csvTools import writeCsv
 from helpers.seabornTools import scatterPlot3D
 from helpers.timeTools import myTimer
 from paths import DataDir
@@ -473,6 +476,7 @@ def handlePointsToTheSide(data, indices, d, side="L"):
     spy1 = data[0][1]
     spy2 = data[1][1]
 
+    # our center point in the hexagon coincides with origin of the coordinate system
     if spy1 > 0 and spy2 < 0:
         if side == "L":
             assert d.get("tlp", None) is None
@@ -538,6 +542,13 @@ def removeDuplicateTriangles(triangles):
 
 
 def findTriangles(data, k=7, debug=False, useIntermediateResults=False):
+    # TODO
+    #  1. are the correct points chosen for the triangles?
+    #  2. why are there more interpolated points than original points?
+    #   are not all duplicates removed (?)
+    #   lower bound: each hexagon gives 6 unique points,
+    #   upper bound: a naive algorithm however will count each point thrice given sufficient hexagons
+    #  3. does the information make sense?
     dists, indices = computeNearestNeighboursMatrix(data, k=k)
 
     N = len(data)
@@ -547,10 +558,10 @@ def findTriangles(data, k=7, debug=False, useIntermediateResults=False):
         nbIndices = indices[i]
         alignedData = alignData(data[nbIndices])
 
-        # flps, lps, cps, rps, frps = determinePosition(alignedData, nbIndices)
         flps, lps, cps, rps, frps = determinePosition(alignedData, np.arange(k))
         if len(lps) == 2 and len(cps) == 3 and len(rps) == 2:
             # we have a hexagon structure
+
             d = dict()
             handlePointsToTheSide(alignedData[lps], nbIndices[lps], d, side="L")
             handlePointsToTheSide(alignedData[rps], nbIndices[rps], d, side="R")
@@ -564,3 +575,36 @@ def findTriangles(data, k=7, debug=False, useIntermediateResults=False):
 
     triangles = removeDuplicateTriangles(triangles)
     return triangles, errorIndices
+
+
+def interpolateViaTriangles(voxelData, displacementData, k=7, debug=False, useIntermediateResults=False):
+    # TODO
+    #  1. is the correct information written out?
+    #  2. does the information make sense?
+    triangles, errorIndices = findTriangles(voxelData, k=k, debug=debug,
+                                            useIntermediateResults=useIntermediateResults)
+
+    df = pd.DataFrame(columns=interpolatedDataHeaders.allHeaders)
+    N = len(triangles)
+    for i in range(N):
+        d = dict()
+        tri = np.array(triangles[i], dtype=int)
+        vd = voxelData[tri]
+        dd = displacementData[tri]
+
+        mvd = np.mean(vd, axis=0)
+        mdd = np.mean(dd, axis=0)
+
+        totalDisp = np.linalg.norm(mdd, ord=2)
+
+        d[interpolatedDataHeaders.x] = mvd[0]
+        d[interpolatedDataHeaders.y] = mvd[1]
+        d[interpolatedDataHeaders.z] = mvd[2]
+        d[interpolatedDataHeaders.xDisplacement] = mdd[0]
+        d[interpolatedDataHeaders.yDisplacement] = mdd[1]
+        d[interpolatedDataHeaders.zDisplacement] = mdd[2]
+        d[interpolatedDataHeaders.totalDisplacement] = totalDisp
+
+        df = df.append(d.copy(), ignore_index=True)
+
+    return df
