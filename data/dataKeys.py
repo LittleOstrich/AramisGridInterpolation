@@ -26,8 +26,23 @@ class viereckRasterHeaders:
     x_Koordinate = "x-Koordinate"
     y_Koordinate = "y-Koordinate"
     z_Koordinate = "z-Koordinate"
+    verschiebungX = "Verschiebung x-Richtung [mm]"
+    verschiebungY = "Verschiebung y-Richtung [mm]"
+    verschiebungZ = "Verschiebung 7-Richtung [mm]"
+    dehnungX = "Dehnung eps_x [%]"
+    dehnungY = "Dehnung eps_y [%]"
+    dehnungXY = "Dehnung eps_xy [log]"
+    strainPhi1 = "strain_phi1 [log]"
+    strainPhi2 = "strain_phi2 [log]"
+    strainPhi3 = "strain_phi3 [log]"
+    time = "time [sec]"
 
-    allHeaders = [index_x, index_y, x_Koordinate, y_Koordinate, z_Koordinate]
+    allHeaders = [index_x, index_y,
+                  x_Koordinate, y_Koordinate, z_Koordinate,
+                  verschiebungX, verschiebungY, verschiebungZ,
+                  dehnungX, dehnungY, dehnungXY,
+                  strainPhi2, strainPhi3,
+                  time]
 
 
 class interpolatedDataHeaders:
