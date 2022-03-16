@@ -320,17 +320,22 @@ def constructMatrix(data, k=7, sn=None, iterationsMax=50000, hexagonsOnly=False,
         if switch == -1:
             break
 
+        # we are continuously swapping between odd and even points
         curS = curSet(next1, next2, switch)
         oppS = oppSet(next1, next2, switch)
         curV = curSet(visited1, visited2, switch)
         oppV = oppSet(visited1, visited2, switch)
 
+        # getting the next val for the current iteration
         curInd = curS.pop()
         curV.add(curInd)
 
         curIndices = indices[curInd]
+
+        # fit a plane to the data and project the data onto it
         alignedData = alignData(data[curIndices])
 
+        # determine the relative positions of the nearest neighbours
         flps, lps, cps, rps, frps = determinePosition(alignedData, curIndices)
 
         if hexagonsOnly:
@@ -463,6 +468,7 @@ def constructMatrix(data, k=7, sn=None, iterationsMax=50000, hexagonsOnly=False,
                 print("iterationsCur: ", iterationsCur)
         iterationsCur = iterationsCur + 1
 
+        # used a hard instead of weak copy to avoid conflicts between references
         visited1 = curV.copy()
         visited2 = oppV.copy()
         next1 = curS.copy()

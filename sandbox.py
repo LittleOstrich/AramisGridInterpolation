@@ -4,6 +4,8 @@ from scipy.interpolate import griddata
 import matplotlib.pyplot as plt
 import matplotlib
 
+# Written by Florian Thamm
+
 # Settings
 path = r"C:\Users\geiss\OneDrive\Desktop\LainProject\Python\AramisGridInterpolation\data\cleanSamples\dreieck_raster2.csv"
 h = 100  # width of target resolution

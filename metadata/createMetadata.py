@@ -8,6 +8,12 @@ import logging
 import paths
 from interpolate import interpolate
 
+'''
+This file was used to create metadata for individual files. In the beginning there were only 4
+files to begin with, so this code was sufficient. As however the amount of data increased, one
+might want to look across several files/frames and aggregate this data. This would be yet to do.  
+'''
+
 logging.getLogger().setLevel(logging.CRITICAL)
 
 from backbone import alignData

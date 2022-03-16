@@ -2,6 +2,16 @@ from abc import ABC, abstractmethod
 
 import numpy as np
 
+# TODO
+"""
+Currently unused.
+These classes below go with the backbone. Give a starting point on the pointmap, 
+which point should be selected next? These selectors classes below define a policy
+how the next point is chosen. Ideally though all selectors should still produce the
+same results, there is only one true pointmap, however it seems that some regions tip off
+the algorithms, making things rather unpleasant. 
+"""
+
 
 class Selector(ABC):
     nextEvenPoints = None
