@@ -31,11 +31,6 @@ def computeNearestNeighboursMatrix(X, k=7, debug=False):  # (x,y,z) , (thickness
     return dists, indices
 
 
-def fMinLeastSquare(data, initialGuess):
-    # distance = (plane_xyz * X.T).sum(axis=1) + initialGuess[:-1]
-    pass
-
-
 def fitPointsToPlane(data, mode="LSE"):
     '''
     The general description of a plane is: Ax  + by = z
@@ -46,7 +41,7 @@ def fitPointsToPlane(data, mode="LSE"):
     '''
     if mode == "LSE":
         from scipy.optimize import leastsq
-        initialGuess = 0
+        initialGuess = np.array([0, 0, 0])
         sol = leastsq(fMinLeastSquare, initialGuess, args=(None, data))[0]
         pass
     elif mode == "PCA":
@@ -66,6 +61,11 @@ def fitPointsToPlane(data, mode="LSE"):
 
 
 def estimatePlaneThroughData(data):
+    """
+    Cheap way to construct a plane through the data
+    :param data:
+    :return:
+    """
     data = np.array(data)
 
     m = np.mean(data, axis=0)
@@ -80,6 +80,11 @@ def estimatePlaneThroughData(data):
 
 
 def constructTransformation(plane):
+    """
+    Rotate the plane to make it parallel to the xy- plane
+    :param plane:
+    :return:
+    """
     cartesian = plane.cartesian()
 
     a = cartesian[0]
@@ -102,6 +107,18 @@ def constructTransformation(plane):
 
 
 def alignData(data):
+    """
+    Data consists of a center point and certain number of nearest neighbours (7 be default).
+    The center point is the first row entry in data.
+    1. fit a plane to the data,
+    2. Construction a rotation matrix to align the data (and the plane) so they are
+    parallel to the xy plane
+    3. center the data, so above-mentioned center point has the coordinates (0,0,0)
+    The resulting patterns have very very characteristic shapes and one can easily define
+    magic numbers that are most likely invariant across the dataset
+    :param data:
+    :return:
+    """
     plane = estimatePlaneThroughData(data)
     a, b, c, d = plane.cartesian()
     rotMatrix = constructTransformation(plane)
@@ -117,26 +134,31 @@ def alignData(data):
     return translated  # aligned data
 
 
+# everyone likes magic numbers
 def isFarleft(x):
     ret = x < -0.75
     return ret
 
 
+# magic numbers
 def isLeft(x):
     ret = x < -0.25 and x > -0.75
     return ret
 
 
+# magic numbers
 def isCenter(x):
     ret = x > -0.25 and x < 0.25
     return ret
 
 
+# magic numbers
 def isRight(x):
     ret = x > 0.25 and x < 0.75
     return ret
 
 
+# magic numbers
 def isFarright(x):
     ret = x > 0.75
     return ret
@@ -271,6 +293,30 @@ def startNumber(sn, N):
 
 
 def constructMatrix(data, k=7, sn=None, iterationsMax=50000, hexagonsOnly=False, debug=False):
+    """
+    Base assumption: The data be separated into 2 grids (g1, g2) that are just shifted to another.
+    Given a desired triangle in the mesh, 1 point belongs to the first grid, 2 point belong to the second grid
+    (or vice versa)
+    Steps:
+    1. Determine for every point its nearest neighbours
+    2. Randomly choose a starting point P, wlog this point belongs to g1 and has
+    a suitable location in the pointmap e.g. 1000, 1000
+    3. Determine the local shape around P consisting of its nearest neighboring points
+    A, B, C...
+    4. Determine if the points belong to either g1 or g2 via magic numbers
+    5. Update the pointmap with the indices of the data - g1, g2 are encoded together in it.
+    E.g. points in g1 only have even indices [i,j], g2 only odd indices [i,j].
+    The rest of the values in the pointmap can be kept -1
+    6. Crop the pointmap to a suitable size
+    :param data:
+    :param k:
+    :param sn:
+    :param iterationsMax:
+    :param hexagonsOnly:
+    :param debug:
+    :return: pointmap
+    """
+
     se = None
     if debug:
         se = myTimer("constructMatrixTimer")
